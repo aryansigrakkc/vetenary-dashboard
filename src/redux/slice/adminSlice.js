@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginAdmin } from "../thunks/adminThunk";
+import { loginAdmin,logoutAdmin } from "../thunks/adminThunk";
 
 const adminSlice = createSlice({
   name: "Dashboard",
@@ -22,7 +22,20 @@ const adminSlice = createSlice({
       .addCase(loginAdmin.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
+      })
+      
+      .addCase(logoutAdmin.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(logoutAdmin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload.data;
+      })
+      .addCase(logoutAdmin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
       });
+      
       
   },
 });

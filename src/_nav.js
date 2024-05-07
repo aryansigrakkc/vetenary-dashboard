@@ -28,6 +28,38 @@ const _nav = [
   },
   {
     component: CNavTitle,
+    name: 'Products',
+  },
+  {
+    component: CNavGroup,
+    name: 'Products',
+    to: '/all/products',
+    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'All Products',
+        to: '/all/products',
+      },
+      {
+        component: CNavItem,
+        name: 'Add New',
+        to: '/add/product',
+      },
+      {
+        component: CNavItem,
+        name: 'Categories',
+        to: '/all/categories',
+      },
+      {
+        component: CNavItem,
+        name: 'Tags',
+        to: '/all/tags',
+      },
+    ],
+  },
+  {
+    component: CNavTitle,
     name: 'Theme',
   },
   {
