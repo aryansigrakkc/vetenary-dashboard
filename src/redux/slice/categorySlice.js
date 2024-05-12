@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { changeCategoryStatus, createCategory,fetchCategory,fetchDeletedCategory,fetchInactiveCategory,restoreCategory } from "../thunks/categoryThunk";
+import { changeCategoryStatus, createCategory,fetchCategory,fetchDeletedCategory,fetchInactiveCategory,restoreCategory,deleteCategory,changeCategoryImage, updateCategory } from "../thunks/categoryThunk";
 
 const categorySlice = createSlice({
   name: "Admin/Category",
@@ -82,6 +82,44 @@ const categorySlice = createSlice({
         state.data = action.payload;
       })
       .addCase(restoreCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+      })
+
+      .addCase(deleteCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+      })
+      .addCase(deleteCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+      })
+
+
+      .addCase(changeCategoryImage.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changeCategoryImage.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+      })
+      .addCase(changeCategoryImage.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+      })
+
+
+      .addCase(updateCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+      })
+      .addCase(updateCategory.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
       })

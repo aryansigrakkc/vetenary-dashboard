@@ -53,4 +53,33 @@ const restoreCategory = createAsyncThunk(
   }
 );
 
-export  {createCategory,fetchCategory,changeCategoryStatus,fetchInactiveCategory,fetchDeletedCategory,restoreCategory};
+const deleteCategory = createAsyncThunk(
+  "category/delete",
+  async ({mainObjectId}) => {
+    const response = await utility.delete(`category/delete/category/${mainObjectId}`);
+    return response.data;
+  }
+);
+
+const changeCategoryImage = createAsyncThunk(
+  "category/changeImage",
+  async (e) => {
+    const response = await utility.patch(`category/update-image/category`,e,{
+      headers: {
+        'Content-Type':'multipart/form-data'
+      }
+    });
+    return response.data;
+  }
+);
+
+const updateCategory = createAsyncThunk(
+  "category/update",
+  async (e) => {
+    const response = await utility.patch(`category/update/category`,e);
+    return response.data;
+  }
+);
+
+
+export  {createCategory,fetchCategory,changeCategoryStatus,fetchInactiveCategory,fetchDeletedCategory,restoreCategory,deleteCategory,changeCategoryImage,updateCategory};
