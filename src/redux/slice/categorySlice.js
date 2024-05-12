@@ -11,6 +11,7 @@ const categorySlice = createSlice({
   
   reducers: {},
   extraReducers: (builder) => {
+    /*-----------Create New Category---------------*/ 
     builder
       .addCase(createCategory.pending, (state) => {
         state.isLoading = true;
@@ -23,7 +24,7 @@ const categorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
       })
-      
+      /*-----------Fetch All Category---------------*/ 
       .addCase(fetchCategory.pending, (state) => {
         state.isLoading = true;
       })
@@ -35,7 +36,7 @@ const categorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
       })
-
+      /*-----------Fetch All InactiveCategory---------------*/ 
 
       .addCase(fetchInactiveCategory.pending, (state) => {
         state.isLoading = true;
@@ -49,7 +50,7 @@ const categorySlice = createSlice({
         state.isError = true;
       })
 
-
+      /*-----------Fetch All Deleted Category---------------*/ 
       .addCase(fetchDeletedCategory.pending, (state) => {
         state.isLoading = true;
       })
@@ -61,7 +62,7 @@ const categorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
       })
-      
+      /*-----------Update Category Status---------------*/ 
       .addCase(changeCategoryStatus.pending, (state) => {
         state.isLoading = true;
       })
@@ -73,7 +74,7 @@ const categorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
       })
-
+      /*-----------Restore Deleted Category---------------*/ 
       .addCase(restoreCategory.pending, (state) => {
         state.isLoading = true;
       })
@@ -86,6 +87,7 @@ const categorySlice = createSlice({
         state.isError = true;
       })
 
+      /*-----------Delete Category---------------*/ 
       .addCase(deleteCategory.pending, (state) => {
         state.isLoading = true;
       })
@@ -98,7 +100,7 @@ const categorySlice = createSlice({
         state.isError = true;
       })
 
-
+    /*-----------Update Category Image---------------*/ 
       .addCase(changeCategoryImage.pending, (state) => {
         state.isLoading = true;
       })
@@ -111,7 +113,7 @@ const categorySlice = createSlice({
         state.isError = true;
       })
 
-
+    /*-----------Update Category---------------*/ 
       .addCase(updateCategory.pending, (state) => {
         state.isLoading = true;
       })
@@ -122,10 +124,7 @@ const categorySlice = createSlice({
       .addCase(updateCategory.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-      })
-      ;
-      
-      
+      });
   },
 });
 
