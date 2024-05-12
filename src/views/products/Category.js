@@ -348,7 +348,9 @@ const Category = () => {
         if (res.payload.success) {
           // message.success(res.payload.message)
         } else {
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
         }
       });
     } else if (value === "Deleted") {
@@ -357,8 +359,12 @@ const Category = () => {
         if (res.payload.success) {
           // message.success(res.payload.message)
         } else {
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
         }
+      }).catch(err => {
+        
       });
     } else {
       fetchAllCategory();
@@ -383,8 +389,7 @@ const Category = () => {
     const mainObj = { ...item, fileList: [{ url: item.image }] };
     setViewCategoryData(mainObj);
     setMainObjectId(_id);
-
-    
+    form.setFieldsValue({name:mainObj.name,image:mainObj.image}); // Update form fields
   }
 
   const handleCustomRequest = ({ file, onSuccess }) => {
@@ -485,6 +490,11 @@ const Category = () => {
                                     message: 'Please enter category name',
                                     min: 3,
                                   },
+                                  {
+                                    message: 'Maximum characters allowed up to 20',
+                                    max: 20,
+                                  },
+
                                 ]}
                               >
                                 <Input placeholder="Please enter Category name" />
