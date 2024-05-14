@@ -14,6 +14,7 @@ const AddProduct = React.lazy(() => import('./views/products/AddProduct'))
 const Category = React.lazy(() => import('./views/products/Category'))
 const SubCategory = React.lazy(() => import('./views/products/SubCategory'))
 const Brand = React.lazy(() => import('./views/products/Brand'))
+const Banner = React.lazy(() => import('./views/banner/Banner'))
 
 // Base
 const Accordion = React.lazy(() => import('./views/base/accordion/Accordion'))
@@ -69,6 +70,7 @@ const routes = [
   { path: '/all/categories', name: 'Categories', element: Category },
   { path: '/all/subcategories', name: 'SubCategories', element: SubCategory },
   { path: '/all/brand', name: 'Brand', element: Brand },
+  { path: '/all/banner', name: 'Banner', element: Banner },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },

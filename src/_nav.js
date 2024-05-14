@@ -70,6 +70,23 @@ const _nav = [
   },
   {
     component: CNavTitle,
+    name: 'Banner',
+  },
+  {
+    component: CNavGroup,
+    name: 'Banners',
+    to: '/all/banners',
+    icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'All Banner',
+        to: '/all/banner',
+      },
+      ],
+  },
+  {
+    component: CNavTitle,
     name: 'Theme',
   },
   {
