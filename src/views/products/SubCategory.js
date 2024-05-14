@@ -3,7 +3,7 @@ import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, T
 import ImgCrop from 'antd-img-crop';
 import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCategory, fetchInactiveCategory, restoreCategory, deleteCategory,changeCategoryImage, updateCategory } from '../../redux/thunks/categoryThunk'
+import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCategory, fetchInactiveCategory, restoreCategory, deleteCategory, changeCategoryImage, updateCategory } from '../../redux/thunks/categoryThunk'
 import dayjs from 'dayjs'
 const SubCategory = () => {
   const [recperpage, SetRecPerPage] = useState(5);
@@ -18,12 +18,20 @@ const SubCategory = () => {
   const categories = useSelector(state => state.category);
   const [filterStatus, setFilterStatus] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isActiveModalOpen, setIsActiveModalOpen] = useState(false);
   const [mainObjectId, setMainObjectId] = useState("");
 
   useEffect(() => {
-    fetchAllCategory();
+    if (filterStatus === "All") {
+      fetchAllCategory();
+    } else if (filterStatus === "Inactive") {
+      handleInactiveCategory();
+    } else {
+      handleDeletedCategory();
+    }
   }, [activepage, recperpage]);
+  useEffect(()=>{
+
+  },[]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
   };
@@ -77,8 +85,8 @@ const SubCategory = () => {
 
   const onUpdateFinish = (values) => {
     const obj = {
-      _id:mainObjectId,
-      name:values.name
+      _id: mainObjectId,
+      name: values.name
     }
     dispatch(updateCategory(obj)).then((res) => {
       if (res.payload.success) {
@@ -309,15 +317,15 @@ const SubCategory = () => {
           return (<>
             <Flex wrap gap="small" className="site-button-ghost-wrapper">
 
-              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Category'} />
-              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit Category'} />
-              <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete Category'} />
+              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View SubCategory'} />
+              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit SubCategory'} />
+              <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete SubCategory'} />
             </Flex>
           </>)
         } else if (filterStatus === "Inactive") {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active Category"} /></Button>)
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active SubCategory"} /></Button>)
         } else {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Deleted Category"} /></Button>)
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Deleted SubCategory"} /></Button>)
         }
       }
     },
@@ -344,33 +352,41 @@ const SubCategory = () => {
     const { value } = e.target;
     setFilterStatus(value);
     if (value === "Inactive") {
-      dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      });
+      handleInactiveCategory();
     } else if (value === "Deleted") {
-      dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
-        console.log(res)
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      }).catch(err => {
-        
-      });
+
     } else {
       fetchAllCategory();
     }
 
   }
+
+  const handleInactiveCategory = () => {
+    dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
+      if (res.payload.success) {
+        // message.success(res.payload.message)
+      } else {
+        res.payload?.errors ? res.payload.errors.forEach((err) => {
+          message.error(err);
+        }) : message.error(res.payload.message);
+      }
+    });
+  }
+  const handleDeletedCategory = () => {
+    dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
+      console.log(res)
+      if (res.payload.success) {
+        // message.success(res.payload.message)
+      } else {
+        res.payload?.errors ? res.payload.errors.forEach((err) => {
+          message.error(err);
+        }) : message.error(res.payload.message);
+      }
+    }).catch(err => {
+
+    });
+  }
+
   const handleForm = (e) => {
     const { value } = e.target;
     setType(value);
@@ -379,6 +395,7 @@ const SubCategory = () => {
   const showCategoryData = (_id) => {
     const item = arr.find(item => item._id === _id);
     const mainObj = { ...item, fileList: [{ url: item.image }] };
+    form.setFieldsValue({ name: item.name })
     setViewCategoryData(mainObj);
   }
 
@@ -389,12 +406,12 @@ const SubCategory = () => {
     const mainObj = { ...item, fileList: [{ url: item.image }] };
     setViewCategoryData(mainObj);
     setMainObjectId(_id);
-    form.setFieldsValue({name:mainObj.name,image:mainObj.image}); // Update form fields
+    form.setFieldsValue({ name: mainObj.name, image: mainObj.image }); // Update form fields
   }
 
   const handleCustomRequest = ({ file, onSuccess }) => {
     const formData = new FormData();
-    formData.append('_id',mainObjectId);
+    formData.append('_id', mainObjectId);
     formData.append('image', file);
     dispatch(changeCategoryImage(formData)).then((res) => {
       if (res.payload.success) {
@@ -414,7 +431,7 @@ const SubCategory = () => {
       message.error(err.message);
     })
   };
-  
+
 
   return (
     <>
@@ -470,7 +487,7 @@ const SubCategory = () => {
                     <>
                       <div className='col-md-12'>
                         <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Update Category">
+                          <Card title="Update SubCategory">
                             <Form
                               form={form}
                               layout="vertical"
@@ -480,7 +497,7 @@ const SubCategory = () => {
                             >
                               <Form.Item
                                 name="name"
-                                label="Category Title"
+                                label="SubCategory Title"
                                 size={'large'}
                                 hasFeedback={true}
                                 initialValue={viewCategoryData?.name}
@@ -497,12 +514,12 @@ const SubCategory = () => {
 
                                 ]}
                               >
-                                <Input placeholder="Please enter Category name" />
+                                <Input placeholder="Please enter SubCategory name" />
                               </Form.Item>
 
                               <Form.Item
                                 name="image"
-                                label="Category Image"
+                                label="SubCategory Image"
                                 size={'large'}
                               >
 
@@ -512,7 +529,7 @@ const SubCategory = () => {
                                     onChange={onChange}
                                     onPreview={onPreview}
                                     customRequest={handleCustomRequest}
-                                    fileList={fileList.length<1?viewCategoryData?.fileList:fileList}
+                                    fileList={fileList.length < 1 ? viewCategoryData?.fileList : fileList}
                                   >
                                     {fileList.length < 1 && '+ Upload'}
                                   </Upload>
@@ -533,7 +550,7 @@ const SubCategory = () => {
                     <>
                       <div className='col-md-12'>
                         <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Add New Category">
+                          <Card title="Add New SubCategory">
                             <Form
                               form={form}
                               layout="vertical"
@@ -543,7 +560,7 @@ const SubCategory = () => {
                             >
                               <Form.Item
                                 name="name"
-                                label="Category Title"
+                                label="SubCategory Title"
                                 size={'large'}
                                 hasFeedback={true}
                                 rules={[
@@ -554,12 +571,12 @@ const SubCategory = () => {
                                   },
                                 ]}
                               >
-                                <Input placeholder="Please enter Category name" />
+                                <Input placeholder="Please enter SubCategory name" />
                               </Form.Item>
 
                               <Form.Item
                                 name="image"
-                                label="Category Image"
+                                label="SubCategory Image"
                                 size={'large'}
                                 hasFeedback={true}
                                 rules={[
@@ -617,7 +634,7 @@ const SubCategory = () => {
           </div>
         </div>
       </div>
-      <Modal title={`${actionType} Category`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title={`${actionType} SubCategory`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
         <div>
           {
             actionType === "restore" ?
@@ -641,8 +658,8 @@ const SubCategory = () => {
                             autoComplete="off"
                           >
                             <Form.Item
-                              name="viewName"
-                              label="Category Title"
+                              name="name"
+                              label="SubCategory Title"
                               size={'large'}
                               initialValue={viewCategoryData?.name}
                             >
@@ -650,7 +667,7 @@ const SubCategory = () => {
                             </Form.Item>
                             <Form.Item
                               name="image"
-                              label="Category Image"
+                              label="SubCategory Image"
                               size={'large'}
                               hasFeedback={true}
                             >

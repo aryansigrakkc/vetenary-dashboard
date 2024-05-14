@@ -21,7 +21,14 @@ const Brand = () => {
   const [mainObjectId, setMainObjectId] = useState("");
 
   useEffect(() => {
-    fetchAllBrand();
+    
+    if(filterStatus==="All"){
+      fetchAllBrand();
+    }else if(filterStatus==="Inactive"){
+      handleInactiveBrand();
+    }else{
+      handleDeletedBrand();
+    }
   }, [activepage, recperpage]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
@@ -202,8 +209,9 @@ const Brand = () => {
           dispatch(fetchInactiveBrand({ activepage, recperpage }))
           setType("");
         } else {
-          setType("");
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
         }
       })
 
@@ -214,8 +222,9 @@ const Brand = () => {
           dispatch(fetchDeletedBrand({ activepage, recperpage }));
           setType("");
         } else {
-          setType("");
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
         }
       });
     }
@@ -226,8 +235,9 @@ const Brand = () => {
           fetchAllBrand();
           setType("");
         } else {
-          setType("");
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
           fetchAllBrand();
         }
       });
@@ -308,15 +318,15 @@ const Brand = () => {
           return (<>
             <Flex wrap gap="small" className="site-button-ghost-wrapper">
 
-              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Category'} />
-              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit Category'} />
-              <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete Category'} />
+              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Brand'} />
+              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit Brand'} />
+              <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete Brand'} />
             </Flex>
           </>)
         } else if (filterStatus === "Inactive") {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active Category"} /></Button>)
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active Brand"} /></Button>)
         } else {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Deleted Category"} /></Button>)
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Deleted Brand"} /></Button>)
         }
       }
     },
@@ -339,37 +349,46 @@ const Brand = () => {
   const handlePerPageRecord = (value) => {
     SetRecPerPage(value);
   }
-  const handleCategoryFilter = (e) => {
+  const handleBrandFilter = (e) => {
     const { value } = e.target;
     setFilterStatus(value);
     if (value === "Inactive") {
-      dispatch(fetchInactiveBrand({ activepage, recperpage })).then((res) => {
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      });
+      handleInactiveBrand();
     } else if (value === "Deleted") {
-      dispatch(fetchDeletedBrand({ activepage, recperpage })).then((res) => {
-        console.log(res)
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      }).catch(err => {
-        
-      });
+      handleDeletedBrand();
     } else {
       fetchAllBrand();
     }
 
   }
+const handleInactiveBrand = ()=>{
+  dispatch(fetchInactiveBrand({ activepage, recperpage })).then((res) => {
+    if (res.payload.success) {
+      // message.success(res.payload.message)
+    } else {
+      res.payload?.errors ? res.payload.errors.forEach((err) => {
+        message.error(err);
+      }) : message.error(res.payload.message);
+    }
+  });
+}
+
+const handleDeletedBrand = ()=>{
+  dispatch(fetchDeletedBrand({ activepage, recperpage })).then((res) => {
+    console.log(res)
+    if (res.payload.success) {
+      // message.success(res.payload.message)
+    } else {
+      res.payload?.errors ? res.payload.errors.forEach((err) => {
+        message.error(err);
+      }) : message.error(res.payload.message);
+    }
+  }).catch(err => {
+    
+  });
+}
+
+
   const handleForm = (e) => {
     const { value } = e.target;
     setType(value);
@@ -378,7 +397,9 @@ const Brand = () => {
   const showCategoryData = (_id) => {
     const item = arr.find(item => item._id === _id);
     const mainObj = { ...item, fileList: [{ url: item.image }] };
+    form.setFieldsValue({name:item.name})
     setViewCategoryData(mainObj);
+
   }
 
   const handleCategoryUpdate = (_id) => {
@@ -444,7 +465,7 @@ const Brand = () => {
                 ]}
               />
 
-              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
+              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleBrandFilter}>
                 <Radio value={'All'}>All</Radio>
                 <Radio value={'Inactive'}>Inactive</Radio>
                 <Radio value={'Deleted'}>Deleted</Radio>
@@ -469,7 +490,7 @@ const Brand = () => {
                     <>
                       <div className='col-md-12'>
                         <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Update Category">
+                          <Card title="Update Brand">
                             <Form
                               form={form}
                               layout="vertical"
@@ -479,7 +500,7 @@ const Brand = () => {
                             >
                               <Form.Item
                                 name="name"
-                                label="Category Title"
+                                label="Brand Title"
                                 size={'large'}
                                 hasFeedback={true}
                                 initialValue={viewCategoryData?.name}
@@ -496,12 +517,12 @@ const Brand = () => {
 
                                 ]}
                               >
-                                <Input placeholder="Please enter Category name" />
+                                <Input placeholder="Please enter Brand name" />
                               </Form.Item>
 
                               <Form.Item
                                 name="image"
-                                label="Category Image"
+                                label="Brand Image"
                                 size={'large'}
                               >
 
@@ -532,7 +553,7 @@ const Brand = () => {
                     <>
                       <div className='col-md-12'>
                         <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Add New Category">
+                          <Card title="Add New Brand">
                             <Form
                               form={form}
                               layout="vertical"
@@ -542,7 +563,7 @@ const Brand = () => {
                             >
                               <Form.Item
                                 name="name"
-                                label="Category Title"
+                                label="Brand Title"
                                 size={'large'}
                                 hasFeedback={true}
                                 rules={[
@@ -553,12 +574,12 @@ const Brand = () => {
                                   },
                                 ]}
                               >
-                                <Input placeholder="Please enter Category name" />
+                                <Input placeholder="Please enter Brand name" />
                               </Form.Item>
 
                               <Form.Item
                                 name="image"
-                                label="Category Image"
+                                label="Brand Image"
                                 size={'large'}
                                 hasFeedback={true}
                                 rules={[
@@ -616,7 +637,7 @@ const Brand = () => {
           </div>
         </div>
       </div>
-      <Modal title={`${actionType} Category`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title={`${actionType} Brand`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
         <div>
           {
             actionType === "restore" ?
@@ -640,8 +661,8 @@ const Brand = () => {
                             autoComplete="off"
                           >
                             <Form.Item
-                              name="viewName"
-                              label="Category Title"
+                              name="name"
+                              label="Brand Name"
                               size={'large'}
                               initialValue={viewCategoryData?.name}
                             >
@@ -649,7 +670,7 @@ const Brand = () => {
                             </Form.Item>
                             <Form.Item
                               name="image"
-                              label="Category Image"
+                              label="Brand Image"
                               size={'large'}
                               hasFeedback={true}
                             >

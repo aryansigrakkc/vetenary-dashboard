@@ -22,7 +22,13 @@ const Category = () => {
   const [mainObjectId, setMainObjectId] = useState("");
 
   useEffect(() => {
-    fetchAllCategory();
+    if(filterStatus==="All"){
+      fetchAllCategory();
+    }else if(filterStatus==="Inactive"){
+      handleInactiveCategory();
+    }else{
+      handleDeletedCategory();
+    }
   }, [activepage, recperpage]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
@@ -344,33 +350,41 @@ const Category = () => {
     const { value } = e.target;
     setFilterStatus(value);
     if (value === "Inactive") {
-      dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      });
+      handleInactiveCategory();
     } else if (value === "Deleted") {
-      dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
-        console.log(res)
-        if (res.payload.success) {
-          // message.success(res.payload.message)
-        } else {
-          res.payload?.errors ? res.payload.errors.forEach((err) => {
-            message.error(err);
-          }) : message.error(res.payload.message);
-        }
-      }).catch(err => {
         
-      });
     } else {
       fetchAllCategory();
     }
 
   }
+
+  const handleInactiveCategory = ()=>{
+    dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
+      if (res.payload.success) {
+        // message.success(res.payload.message)
+      } else {
+        res.payload?.errors ? res.payload.errors.forEach((err) => {
+          message.error(err);
+        }) : message.error(res.payload.message);
+      }
+    });
+  }
+  const handleDeletedCategory = ()=>{
+    dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
+      console.log(res)
+      if (res.payload.success) {
+        // message.success(res.payload.message)
+      } else {
+        res.payload?.errors ? res.payload.errors.forEach((err) => {
+          message.error(err);
+        }) : message.error(res.payload.message);
+      }
+    }).catch(err => {
+      
+    });
+  }
+
   const handleForm = (e) => {
     const { value } = e.target;
     setType(value);
@@ -379,6 +393,7 @@ const Category = () => {
   const showCategoryData = (_id) => {
     const item = arr.find(item => item._id === _id);
     const mainObj = { ...item, fileList: [{ url: item.image }] };
+    form.setFieldsValue({name:item.name})
     setViewCategoryData(mainObj);
   }
 
@@ -641,7 +656,7 @@ const Category = () => {
                             autoComplete="off"
                           >
                             <Form.Item
-                              name="viewName"
+                              name="name"
                               label="Category Title"
                               size={'large'}
                               initialValue={viewCategoryData?.name}
