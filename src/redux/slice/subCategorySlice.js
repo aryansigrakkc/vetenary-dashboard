@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { changeSubCategoryStatus, createSubCategory,fetchSubCategory,fetchDeletedSubCategory,fetchInactiveSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage, updateSubCategory } from "../thunks/categoryThunk";
+import { changeSubCategoryStatus, createSubCategory,fetchSubCategory,fetchDeletedSubCategory,fetchInactiveSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage, updateSubCategory } from "../thunks/subCategoryThunk";
 
 const subCategorySlice = createSlice({
   name: "Admin/SubCategory",
@@ -36,6 +36,7 @@ const subCategorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
       })
+
       /*-----------Fetch All Inactive SubCategory---------------*/ 
 
       .addCase(fetchInactiveSubCategory.pending, (state) => {

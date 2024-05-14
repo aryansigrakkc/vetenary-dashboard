@@ -3,8 +3,11 @@ import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, T
 import ImgCrop from 'antd-img-crop';
 import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCategory, fetchInactiveCategory, restoreCategory, deleteCategory, changeCategoryImage, updateCategory } from '../../redux/thunks/categoryThunk'
+import { fetchSubCategory, createSubCategory, changeSubCategoryStatus, fetchDeletedSubCategory, fetchInactiveSubCategory, restoreSubCategory, deleteSubCategory, changeSubCategoryImage, updateSubCategory } from '../../redux/thunks/subCategoryThunk';
+
+import { fetchAllCategory } from '../../redux/thunks/categoryThunk';
 import dayjs from 'dayjs'
+
 const SubCategory = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
@@ -15,29 +18,52 @@ const SubCategory = () => {
   const [actionType, setActionType] = useState("");
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const subcategories = useSelector(state => state.subcategory);
   const categories = useSelector(state => state.category);
   const [filterStatus, setFilterStatus] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mainObjectId, setMainObjectId] = useState("");
+  const [categoryList,setCategoryList] = useState([]);
 
   useEffect(() => {
     if (filterStatus === "All") {
-      fetchAllCategory();
+      fetchAllSubCategory();
     } else if (filterStatus === "Inactive") {
-      handleInactiveCategory();
+      handleInactiveSubCategory();
     } else {
-      handleDeletedCategory();
+      handleDeletedSubCategory();
     }
   }, [activepage, recperpage]);
-  useEffect(()=>{
 
+  useEffect(()=>{
+    dispatch(fetchAllCategory()).then((res)=>{
+      if (res.payload.success) {
+        const arr = [];
+        res.payload.data.forEach((item)=>{
+          arr.push({value:item._id,label:item.name.toUpperCase()})
+        })
+        setCategoryList(arr);
+      } else {
+        if (res.payload.errors) {
+          res.payload.errors.forEach((err) => {
+            message.error(err.msg);
+          })
+        } else {
+          message.error(res.payload.message);
+        }
+
+      }
+    }).catch((err) => {
+      message.error(err.message);
+    });
   },[]);
+
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
   };
 
   const [fileList, setFileList] = useState([]);
-  const [viewCategoryData, setViewCategoryData] = useState([]);
+  const [viewSubCategoryData, setViewSubCategoryData] = useState([]);
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
@@ -58,13 +84,15 @@ const SubCategory = () => {
 
   const onFinish = (values) => {
     const formData = new FormData()
+    formData.append('category', values.category);
     formData.append('name', values.name);
     formData.append('image', fileList.length > 0 ? fileList[0].originFileObj
       : null);
-    dispatch(createCategory(formData)).then((res) => {
+      
+    dispatch(createSubCategory(formData)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllCategory();
+        fetchAllSubCategory();
         setOpen(false);
         setFileList([]);
         form.resetFields();
@@ -86,12 +114,13 @@ const SubCategory = () => {
   const onUpdateFinish = (values) => {
     const obj = {
       _id: mainObjectId,
-      name: values.name
+      name: values.name,
+      category:values.category
     }
-    dispatch(updateCategory(obj)).then((res) => {
+    dispatch(updateSubCategory(obj)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllCategory();
+        fetchAllSubCategory();
         setOpen(false);
         setFileList([]);
         form.resetFields();
@@ -99,10 +128,10 @@ const SubCategory = () => {
         res.payload?.errors ? res.payload.errors.forEach((err) => {
           message.error(err);
         }) : message.error(res.payload.message);
-        fetchAllCategory();
+        fetchAllSubCategory();
       }
     }).catch(err => {
-      fetchAllCategory();
+      fetchAllSubCategory();
       message.error(err.message);
     })
   };
@@ -111,8 +140,8 @@ const SubCategory = () => {
     message.error('Submit failed!', errorInfo);
   };
 
-  const fetchAllCategory = () => {
-    dispatch(fetchCategory({ activepage, recperpage })).then((res) => {
+  const fetchAllSubCategory = () => {
+    dispatch(fetchSubCategory()).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -129,27 +158,26 @@ const SubCategory = () => {
     setOpen(false);
     form.resetFields();
   };
-
   /*Modal Box*/
   const showModal = (_id, actionType) => {
     setMainObjectId(_id);
     setIsModalOpen(true);
     setActionType(actionType);
     if (actionType === 'view') {
-      showCategoryData(_id);
+      showSubCategoryData(_id);
     }
   };
   const handleOk = () => {
     if (type === "restore" && actionType === "restore") {
-      hanleRestoreCategory();
+      hanleRestoreSubCategory();
       setIsModalOpen(false);
     }
     else if (type === "active" && actionType === "reactive") {
-      hanleRestoreCategory();
+      hanleRestoreSubCategory();
       setIsModalOpen(false);
     }
     else if (type === "delete" && actionType === "delete") {
-      hanleRestoreCategory();
+      hanleRestoreSubCategory();
       setIsModalOpen(false);
     }
     else if (type === "") {
@@ -172,22 +200,22 @@ const SubCategory = () => {
     SetActivePage(page);
   }
 
-  const handleCategoryStatus = (id, status) => {
+  const handleSubCategoryStatus = (id, status) => {
     status = status === 0 ? 1 : 0;
     let obj = {
       _id: id,
       status: status
     }
-    dispatch(changeCategoryStatus(obj)).then((res) => {
+    dispatch(changeSubCategoryStatus(obj)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message);
-        fetchAllCategory();
+        fetchAllSubCategory();
       } else {
         if (res.payload.errors) {
           res.payload.errors.forEach((err) => {
             message.error(err.msg);
           })
-          fetchAllCategory();
+          fetchAllSubCategory();
         } else {
           message.error(res.payload.message);
         }
@@ -199,16 +227,16 @@ const SubCategory = () => {
 
   }
 
-  const hanleRestoreCategory = () => {
+  const hanleRestoreSubCategory = () => {
     if (filterStatus === "Inactive") {
       const obj = {
         _id: mainObjectId,
         status: 1
       }
-      dispatch(changeCategoryStatus(obj)).then((res) => {
+      dispatch(changeSubCategoryStatus(obj)).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchInactiveCategory({ activepage, recperpage }))
+          dispatch(fetchInactiveSubCategory({ activepage, recperpage }))
           setType("");
         } else {
           setType("");
@@ -217,10 +245,10 @@ const SubCategory = () => {
       })
 
     } else if (filterStatus === "Deleted") {
-      dispatch(restoreCategory({ activepage, recperpage, mainObjectId })).then((res) => {
+      dispatch(restoreSubCategory({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedCategory({ activepage, recperpage }));
+          dispatch(fetchDeletedSubCategory({ activepage, recperpage }));
           setType("");
         } else {
           setType("");
@@ -229,20 +257,20 @@ const SubCategory = () => {
       });
     }
     else if (actionType === "delete") {
-      dispatch(deleteCategory({ mainObjectId })).then((res) => {
+      dispatch(deleteSubCategory({ mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory();
+          fetchAllSubCategory();
           setType("");
         } else {
           setType("");
           message.error(res.payload.message)
-          fetchAllCategory();
+          fetchAllSubCategory();
         }
       });
     }
     else {
-      fetchAllCategory();
+      fetchAllSubCategory();
     }
   }
 
@@ -270,6 +298,23 @@ const SubCategory = () => {
 
     },
     {
+      title: 'Cate Image',
+      dataIndex: 'cateImage',
+      key: 'cateImage',
+      render: (_, value) => {
+        return (<>
+          <img src={value.cateImage} width={50} height={50} />
+        </>);
+      }
+    },
+    {
+      title: 'Cate Name',
+      dataIndex: 'cateName',
+      key: 'cateName',
+      sorter: (a, b) => a.cateName - b.cateName,
+
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
@@ -279,7 +324,7 @@ const SubCategory = () => {
             return (<>
               <Switch
                 checked={value.status}
-                onChange={() => handleCategoryStatus(value._id, value.status)}
+                onChange={() => handleSubCategoryStatus(value._id, value.status)}
                 checkedChildren="Active"
                 unCheckedChildren="Inactive"
               />
@@ -318,7 +363,7 @@ const SubCategory = () => {
             <Flex wrap gap="small" className="site-button-ghost-wrapper">
 
               <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View SubCategory'} />
-              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit SubCategory'} />
+              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleSubCategoryUpdate(value._id)} title={'Edit SubCategory'} />
               <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete SubCategory'} />
             </Flex>
           </>)
@@ -332,12 +377,14 @@ const SubCategory = () => {
 
   ];
   const arr = [];
-  categories?.data?.data?.forEach((item, idx) => {
+  subcategories?.data?.data?.forEach((item, idx) => {
     arr.push({
       _id: item._id,
       sno: (idx + sno + 1),
       name: item.name,
       image: `http://localhost:8080/${item.image}`,
+      cateName: item.category.name,
+      cateImage: `http://localhost:8080/${item.category.image}`,
       status: item.status,
       createdAt: (dayjs(item.timeStamps).format('DD/MM/YY')),
       isDeleted: item.isDeleted,
@@ -348,21 +395,22 @@ const SubCategory = () => {
   const handlePerPageRecord = (value) => {
     SetRecPerPage(value);
   }
-  const handleCategoryFilter = (e) => {
+
+  const handleSubCategoryFilter = (e) => {
     const { value } = e.target;
     setFilterStatus(value);
     if (value === "Inactive") {
-      handleInactiveCategory();
+      handleInactiveSubCategory();
     } else if (value === "Deleted") {
 
     } else {
-      fetchAllCategory();
+      fetchAllSubCategory();
     }
 
   }
 
-  const handleInactiveCategory = () => {
-    dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
+  const handleInactiveSubCategory = () => {
+    dispatch(fetchInactiveSubCategory({ activepage, recperpage })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -372,8 +420,9 @@ const SubCategory = () => {
       }
     });
   }
-  const handleDeletedCategory = () => {
-    dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
+  
+  const handleDeletedSubCategory = () => {
+    dispatch(fetchDeletedSubCategory({ activepage, recperpage })).then((res) => {
       console.log(res)
       if (res.payload.success) {
         // message.success(res.payload.message)
@@ -392,31 +441,32 @@ const SubCategory = () => {
     setType(value);
   }
 
-  const showCategoryData = (_id) => {
+  const showSubCategoryData = (_id) => {
+    
     const item = arr.find(item => item._id === _id);
     const mainObj = { ...item, fileList: [{ url: item.image }] };
-    form.setFieldsValue({ name: item.name })
-    setViewCategoryData(mainObj);
+    form.setFieldsValue({ name: item.name,category:item.cateName })
+    setViewSubCategoryData(mainObj);
   }
 
-  const handleCategoryUpdate = (_id) => {
+  const handleSubCategoryUpdate = (_id) => {
     const item = arr.find(item => item._id === _id);
     showDrawer(true);
     setActionType('update');
     const mainObj = { ...item, fileList: [{ url: item.image }] };
-    setViewCategoryData(mainObj);
+    form.setFieldsValue({ name: item.name,category:item.cateName }) // Update form fields
+    setViewSubCategoryData(mainObj);
     setMainObjectId(_id);
-    form.setFieldsValue({ name: mainObj.name, image: mainObj.image }); // Update form fields
   }
 
   const handleCustomRequest = ({ file, onSuccess }) => {
     const formData = new FormData();
     formData.append('_id', mainObjectId);
     formData.append('image', file);
-    dispatch(changeCategoryImage(formData)).then((res) => {
+    dispatch(changeSubCategoryImage(formData)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllCategory();
+        fetchAllSubCategory();
         setOpen(false);
         showDrawer(false)
         setFileList([]);
@@ -432,6 +482,15 @@ const SubCategory = () => {
     })
   };
 
+  const onChangeCategoryDropdown = (value) => {
+    // console.log(`selected ${value}`);
+  };
+  const onSearchCategoryDropdown = (value) => {
+    // console.log('search:', value);
+  };
+  
+  const filterOptionCategoryDropdown = (input, option) =>
+    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
 
   return (
     <>
@@ -442,27 +501,35 @@ const SubCategory = () => {
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
-                options={[
-                  {
-                    value: '5',
-                    label: '5',
-                  },
-                  {
-                    value: '10',
-                    label: '10',
-                  },
-                  {
-                    value: '20',
-                    label: '20',
-                  },
-                  {
-                    value: '50',
-                    label: '50',
-                  }
-                ]}
+                options={[{
+                  value:5,
+                  label:5
+                },
+                {
+                  value:10,
+                  label:10
+                },
+                {
+                  value:20,
+                  label:20
+                },
+                {
+                  value:30,
+                  label:30
+                },
+                {
+                  value:40,
+                  label:40
+                },
+                {
+                  value:50,
+                  label:50
+                }
+              
+              ]}
               />
 
-              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
+              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleSubCategoryFilter}>
                 <Radio value={'All'}>All</Radio>
                 <Radio value={'Inactive'}>Inactive</Radio>
                 <Radio value={'Deleted'}>Deleted</Radio>
@@ -496,15 +563,37 @@ const SubCategory = () => {
                               autoComplete="off"
                             >
                               <Form.Item
+                                  name="category"
+                                  label="Select Category"
+                                  size={'large'}
+                                  hasFeedback={true}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: 'Please select a category',
+                                    },
+                                  ]}
+                                >
+                                  <Select
+                                        showSearch
+                                        placeholder="Select a category"
+                                        optionFilterProp="children"
+                                        onChange={onChangeCategoryDropdown}
+                                        onSearch={onSearchCategoryDropdown}
+                                        filterOption={filterOptionCategoryDropdown}
+                                        options={categoryList}
+                                      />
+                                </Form.Item>
+                              <Form.Item
                                 name="name"
                                 label="SubCategory Title"
                                 size={'large'}
                                 hasFeedback={true}
-                                initialValue={viewCategoryData?.name}
+                                initialValue={viewSubCategoryData?.name}
                                 rules={[
                                   {
                                     required: true,
-                                    message: 'Please enter category name',
+                                    message: 'Please enter Subcategory name',
                                     min: 3,
                                   },
                                   {
@@ -529,7 +618,7 @@ const SubCategory = () => {
                                     onChange={onChange}
                                     onPreview={onPreview}
                                     customRequest={handleCustomRequest}
-                                    fileList={fileList.length < 1 ? viewCategoryData?.fileList : fileList}
+                                    fileList={fileList.length < 1 ? viewSubCategoryData?.fileList : fileList}
                                   >
                                     {fileList.length < 1 && '+ Upload'}
                                   </Upload>
@@ -559,6 +648,29 @@ const SubCategory = () => {
                               autoComplete="off"
                             >
                               <Form.Item
+                                  name="category"
+                                  label="Select Category"
+                                  size={'large'}
+                                  hasFeedback={true}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: 'Please select a category',
+                                    },
+                                  ]}
+                                >
+                                  <Select
+                                        showSearch
+                                        placeholder="Select a category"
+                                        optionFilterProp="children"
+                                        onChange={onChangeCategoryDropdown}
+                                        onSearch={onSearchCategoryDropdown}
+                                        filterOption={filterOptionCategoryDropdown}
+                                        options={categoryList}
+                                      />
+                                </Form.Item>
+
+                              <Form.Item
                                 name="name"
                                 label="SubCategory Title"
                                 size={'large'}
@@ -566,7 +678,7 @@ const SubCategory = () => {
                                 rules={[
                                   {
                                     required: true,
-                                    message: 'Please enter category name',
+                                    message: 'Please enter Subcategory name',
                                     min: 3,
                                   },
                                 ]}
@@ -583,7 +695,7 @@ const SubCategory = () => {
                                   {
                                     validator: (_, value) => {
                                       if (fileList.length < 1) {
-                                        return Promise.reject('Please choose category image');
+                                        return Promise.reject('Please choose Subcategory image');
                                       }
                                       return Promise.resolve();
                                     },
@@ -619,7 +731,7 @@ const SubCategory = () => {
             </div>
           </div>
           <div className='col-md-12'>
-            <Table columns={columns} dataSource={arr} onChange={onChangeTable} pagination={false} loading={categories.isLoading} />
+            <Table columns={columns} dataSource={arr} onChange={onChangeTable} pagination={false} loading={subcategories.isLoading} />
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
@@ -634,16 +746,17 @@ const SubCategory = () => {
           </div>
         </div>
       </div>
+
       <Modal title={`${actionType} SubCategory`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
         <div>
           {
             actionType === "restore" ?
               <><input type="text" className='form-control' value={type} onChange={handleForm} />
-                <p>Note:If you want to restore the deleted category so please type <pre><code><Tag color={"green"}>'restore'</Tag></code></pre></p></> :
+                <p>Note:If you want to restore the deleted Subcategory so please type <pre><code><Tag color={"green"}>'restore'</Tag></code></pre></p></> :
               actionType === "reactive" ?
                 <>
                   <input type="text" className='form-control' value={type} onChange={handleForm} />
-                  <p>Note:If you want to activate to this category so please type <pre><code><Tag color={"green"}>'active'</Tag></code></pre></p>
+                  <p>Note:If you want to activate to this Subcategory so please type <pre><code><Tag color={"green"}>'active'</Tag></code></pre></p>
                 </> :
                 actionType === "view" ?
                   <>
@@ -657,11 +770,19 @@ const SubCategory = () => {
                             onFinishFailed={onFinishFailed}
                             autoComplete="off"
                           >
+                             <Form.Item
+                              name="category"
+                              label="Category Title"
+                              size={'large'}
+                              initialValue={viewSubCategoryData?.category}
+                            >
+                              <Input disabled={true} />
+                            </Form.Item>
                             <Form.Item
                               name="name"
                               label="SubCategory Title"
                               size={'large'}
-                              initialValue={viewCategoryData?.name}
+                              initialValue={viewSubCategoryData?.name}
                             >
                               <Input disabled={true} />
                             </Form.Item>
@@ -673,7 +794,7 @@ const SubCategory = () => {
                             >
                               <Upload
                                 listType="picture-card"
-                                fileList={viewCategoryData?.fileList}
+                                fileList={viewSubCategoryData?.fileList}
                                 onChange={onChange}
                                 onPreview={onPreview}
                               >
@@ -687,7 +808,7 @@ const SubCategory = () => {
                   </> :
                   <>
                     <input type="text" className='form-control' value={type} onChange={handleForm} />
-                    <p>Note:If you want to delete category so please type <pre><code><Tag color={"red"}>'delete'</Tag></code></pre></p>
+                    <p>Note:If you want to delete Subcategory so please type <pre><code><Tag color={"red"}>'delete'</Tag></code></pre></p>
                   </>
           }
 

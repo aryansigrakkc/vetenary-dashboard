@@ -20,6 +20,13 @@ const fetchCategory = createAsyncThunk(
     return response.data;
   }
 );
+const fetchAllCategory = createAsyncThunk(
+  "category/all-category",
+  async () => {
+    const response = await utility.get(`category/fetch/category`);
+    return response.data;
+  }
+);
 
 const fetchInactiveCategory = createAsyncThunk(
   "category/inactive",
@@ -82,4 +89,4 @@ const updateCategory = createAsyncThunk(
 );
 
 
-export  {createCategory,fetchCategory,changeCategoryStatus,fetchInactiveCategory,fetchDeletedCategory,restoreCategory,deleteCategory,changeCategoryImage,updateCategory};
+export  {createCategory,fetchCategory,fetchAllCategory,changeCategoryStatus,fetchInactiveCategory,fetchDeletedCategory,restoreCategory,deleteCategory,changeCategoryImage,updateCategory};

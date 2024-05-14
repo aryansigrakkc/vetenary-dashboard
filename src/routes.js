@@ -12,6 +12,7 @@ const AddProduct = React.lazy(() => import('./views/products/AddProduct'))
 // Category
 
 const Category = React.lazy(() => import('./views/products/Category'))
+const SubCategory = React.lazy(() => import('./views/products/SubCategory'))
 const Brand = React.lazy(() => import('./views/products/Brand'))
 
 // Base
@@ -66,7 +67,7 @@ const routes = [
   { path: '/all/products', name: 'All Products', element: AllProducts },
   { path: '/add/product', name: 'Add Products', element: AddProduct },
   { path: '/all/categories', name: 'Categories', element: Category },
-  { path: '/all/subcategories', name: 'SubCategories', element: Category },
+  { path: '/all/subcategories', name: 'SubCategories', element: SubCategory },
   { path: '/all/brand', name: 'Brand', element: Brand },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
