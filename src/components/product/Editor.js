@@ -20,7 +20,7 @@ const Editor = ({ handleEditorChange }) => {
                 console.log('Focus.', editor);
             }}
 
-            style={{ height: 400 }}
+            style={{ height: "800px" }}
 
         />
     )

@@ -359,7 +359,7 @@ const Banner = () => {
     if (value === "Inactive") {
       handleInactiveBanner();
     } else if (value === "Deleted") {
-        
+      handleDeletedBanner();
     } else {
       fetchAllBanner();
     }

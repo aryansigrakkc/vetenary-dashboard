@@ -8,6 +8,7 @@ import dayjs from 'dayjs'
 const Category = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
+  const [currentPage,setCurrentPage] = useState(1);
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -21,6 +22,7 @@ const Category = () => {
   const [isActiveModalOpen, setIsActiveModalOpen] = useState(false);
   const [mainObjectId, setMainObjectId] = useState("");
 
+  
   useEffect(() => {
     if(filterStatus==="All"){
       fetchAllCategory();
@@ -168,6 +170,7 @@ const Category = () => {
   function paginationHandler(page, pageSize) {
     SetRecPerPage(pageSize);
     SetActivePage(page);
+    setCurrentPage(page);
   }
 
   const handleCategoryStatus = (id, status) => {
@@ -349,10 +352,12 @@ const Category = () => {
   const handleCategoryFilter = (e) => {
     const { value } = e.target;
     setFilterStatus(value);
+    SetActivePage(1);
+    setCurrentPage(1);
     if (value === "Inactive") {
       handleInactiveCategory();
     } else if (value === "Deleted") {
-        
+        handleDeletedCategory();
     } else {
       fetchAllCategory();
     }
@@ -621,10 +626,11 @@ const Category = () => {
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={59}
+              total={categories?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={recperpage}
+              current={currentPage}
               onChange={(page, pageSize) => {
                 paginationHandler(page, pageSize);
               }}

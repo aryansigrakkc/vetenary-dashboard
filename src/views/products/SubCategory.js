@@ -402,7 +402,7 @@ const SubCategory = () => {
     if (value === "Inactive") {
       handleInactiveSubCategory();
     } else if (value === "Deleted") {
-
+      handleDeletedSubCategory();
     } else {
       fetchAllSubCategory();
     }
@@ -489,8 +489,7 @@ const SubCategory = () => {
     // console.log('search:', value);
   };
   
-  const filterOptionCategoryDropdown = (input, option) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+  const filterOptionCategoryDropdown = (input, option) =>(option?.label ?? '').toLowerCase().includes(input.toLowerCase());
 
   return (
     <>

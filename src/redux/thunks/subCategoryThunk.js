@@ -21,6 +21,14 @@ const fetchSubCategory = createAsyncThunk(
   }
 );
 
+const fetchAllSubCategory = createAsyncThunk(
+  "subcategory/all-subcategory",
+  async () => {
+    const response = await utility.get(`subcategory/fetch/subcategory`);
+    return response.data;
+  }
+);
+
 const fetchInactiveSubCategory = createAsyncThunk(
   "subcategory/inactive",
   async ({activepage,recperpage}) => {
@@ -82,4 +90,4 @@ const updateSubCategory = createAsyncThunk(
 );
 
 
-export  {createSubCategory,fetchSubCategory,changeSubCategoryStatus,fetchInactiveSubCategory,fetchDeletedSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage,updateSubCategory};
+export  {createSubCategory,fetchSubCategory,changeSubCategoryStatus,fetchInactiveSubCategory,fetchDeletedSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage,updateSubCategory,fetchAllSubCategory};
