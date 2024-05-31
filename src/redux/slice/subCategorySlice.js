@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { changeSubCategoryStatus, createSubCategory,fetchSubCategory,fetchDeletedSubCategory,fetchInactiveSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage, updateSubCategory } from "../thunks/subCategoryThunk";
+import { changeSubCategoryStatus, createSubCategory,fetchSubCategory,fetchAllSubCategory,fetchDeletedSubCategory,fetchInactiveSubCategory,restoreSubCategory,deleteSubCategory,changeSubCategoryImage, updateSubCategory } from "../thunks/subCategoryThunk";
 
 const subCategorySlice = createSlice({
   name: "Admin/SubCategory",
@@ -33,6 +33,19 @@ const subCategorySlice = createSlice({
         state.data = action.payload;
       })
       .addCase(fetchSubCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+      })
+
+      /*-----------Fetch All Dropdown SubCategory---------------*/ 
+      .addCase(fetchAllSubCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchAllSubCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchAllSubCategory.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
       })

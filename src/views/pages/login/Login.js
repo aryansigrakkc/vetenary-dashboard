@@ -37,11 +37,12 @@ const Login = () => {
       dispatch(loginAdmin({email,password})).then((res)=>{
         const token = res.payload.data.accessToken;
         window.localStorage.setItem('token',token);
+        navigate('/dashboard');
       });
       event.preventDefault()
       event.stopPropagation()
       setValidated(true)
-      navigate('/dashboard');
+      
     }
   }
   return (

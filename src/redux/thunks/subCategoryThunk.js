@@ -23,8 +23,8 @@ const fetchSubCategory = createAsyncThunk(
 
 const fetchAllSubCategory = createAsyncThunk(
   "subcategory/all-subcategory",
-  async () => {
-    const response = await utility.get(`subcategory/fetch/subcategory`);
+  async (categoryId) => {
+    const response = await utility.get(`subcategory/fetch/subcategory/${categoryId}`);
     return response.data;
   }
 );

@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { changeBannerStatus, createBanner,fetchBanner,fetchDeletedBanner,fetchInactiveBanner,restoreBanner,deleteBanner,changeBannerImage, updateBanner } from "../thunks/bannerThunk";
 
-const categorySlice = createSlice({
+const bannerSlice = createSlice({
   name: "Admin/Banner",
   initialState: {
     data: {},
@@ -128,4 +128,4 @@ const categorySlice = createSlice({
   },
 });
 
-export default categorySlice.reducer;
+export default bannerSlice.reducer;

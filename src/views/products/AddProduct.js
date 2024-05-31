@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, message, Space, Card, Select,Upload } from 'antd';
+import { Button, Form, Input, message, Space, Card, Select, Upload, Checkbox } from 'antd';
 import Editor from '../../components/product/Editor';
 import { fetchAllCategory } from '../../redux/thunks/categoryThunk';
-import { useDispatch } from 'react-redux';
+import { fetchAllSubCategory } from '../../redux/thunks/subCategoryThunk';
+import { createProduct } from '../../redux/thunks/productThunk';
+
+import { useDispatch, useSelector } from 'react-redux';
 import "./product.scss";
 
 const AddProduct = () => {
@@ -13,9 +16,12 @@ const AddProduct = () => {
   const [shortEditorData, setShortEditorData] = useState('');
   const [shortEditorError, setShortEditorError] = useState(null);
   const [categoryList, setCategoryList] = useState([]);
+  const [subCategoryList, setSubCategoryList] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [fileList, setFileList] = useState([]);
   const [fileListGallery, setFileListGallery] = useState([]);
+  const subcategoryState = useSelector(state => state.subcategory);
+
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
@@ -64,6 +70,49 @@ const AddProduct = () => {
       setEditorError('Please enter a product description.');
       return;
     }
+    if (!shortEditorData) {
+      setEditorError('Please enter a product short description.');
+      return;
+    }
+
+    const formData = new FormData()
+    formData.append('name', values.name);
+    formData.append('description', values.description);
+    formData.append('shortDescription', values.shortDescription);
+    formData.append('category', values.category);
+    formData.append('code', 'PRO-001');
+    formData.append('sellingPrice', values.selling_price);
+    formData.append('regularPrice', values.regular_price);
+    formData.append('quantity', values.quantity);
+    if (values.subcategoy) {
+      formData.append('subcategory', values.subcategory);
+    }
+    if (values.brand) {
+      formData.append('brand', values.brand);
+    }
+    formData.append('image', fileList.length > 0 ? fileList[0].originFileObj
+      : null);
+    values.gallery.fileList.forEach((item) => {
+      formData.append('gallery', item.originFileObj);
+    });
+    values.promotions.forEach((item) => {
+      formData.append(item, true);
+    });
+
+    dispatch(createProduct(formData)).then((res) => {
+      if (res.payload.success) {
+        message.success(res.payload.message)
+        setFileList([]);
+        form.resetFields();
+      } else {
+        res.payload?.errors ? res.payload.errors.forEach((err) => {
+          message.error(err);
+        }) : message.error(res.payload.message);
+
+      }
+    }).catch(err => {
+      message.error(err.message);
+    })
     message.success('Submit success!');
   };
 
@@ -75,17 +124,64 @@ const AddProduct = () => {
     const data = editor.getData();
     setEditorData(data);
     setEditorError(null);
+    form.setFieldsValue({ description: data });
   };
   const handleEditorChangeShort = (event, editor) => {
     const data = editor.getData();
     setShortEditorData(data);
     setShortEditorError(null);
+    form.setFieldsValue({ shortDescription: data });
   };
+
 
   const onValuesChange = (changedValues, allValues) => {
     setFormValues(allValues);
   };
 
+  const handleSubCategoryList = (categoryId) => {
+    dispatch(fetchAllSubCategory(categoryId)).then((res) => {
+      if (res.payload.success) {
+        const arr = [];
+        res.payload.data.forEach((item) => {
+          arr.push({ value: item._id, label: item.name.toUpperCase() });
+        });
+        setSubCategoryList(arr);
+      } else {
+        if (res.payload.errors) {
+          res.payload.errors.forEach((err) => {
+            message.error(err.msg);
+          });
+        } else {
+          message.error(res.payload.message);
+        }
+      }
+    }).catch((err) => {
+      message.error(err.message);
+    });
+  }
+
+  const options = [
+    {
+      label: 'Hot Deal',
+      value: 'hotDeal',
+    },
+    {
+      label: 'Best Rated',
+      value: 'bestRated',
+    },
+    {
+      label: 'Hot New',
+      value: 'hotNew',
+    },
+    {
+      label: 'Trend',
+      value: 'trend',
+    },
+  ];
+
+  const onChangePromotions = (promotions) => {
+    console.log(promotions, ' promotions')
+  }
   return (
     <div className="row">
       <Form
@@ -130,8 +226,8 @@ const AddProduct = () => {
                       },
                     },
                     {
-                      required:true,
-                      message:""
+                      required: true,
+                      message: ""
                     }
                   ]}
                 >
@@ -141,13 +237,13 @@ const AddProduct = () => {
                   name="shortDescription"
                   label="Product Short Description"
                   size="large"
-                  validateStatus={editorError ? 'error' : ''}
-                  help={editorError}
+                  validateStatus={shortEditorError ? 'error' : ''}
+                  help={shortEditorError}
                   hasFeedback
                   rules={[
                     {
                       validator: (_, value) => {
-                        if (!editorData || editorData === '') {
+                        if (!shortEditorData || shortEditorData === '') {
                           return Promise.reject('Please enter a product short description.');
                         }
                         return Promise.resolve();
@@ -155,11 +251,11 @@ const AddProduct = () => {
                     },
                     {
                       required: true,
-                      message:""
+                      message: ""
                     }
                   ]}
                 >
-                  <Editor handleEditorChange={handleEditorChangeShort}/>
+                  <Editor handleEditorChange={handleEditorChangeShort} />
                 </Form.Item>
                 <Space direction="horizontal">
                   <Form.Item
@@ -171,12 +267,14 @@ const AddProduct = () => {
                   >
                     <Select
                       showSearch
+                      loading={subcategoryState.isLoading}
                       placeholder="Select a category"
                       optionFilterProp="children"
                       filterOption={(input, option) =>
                         (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                       options={categoryList}
+                      onChange={handleSubCategoryList}
                     />
                   </Form.Item>
                   <Form.Item
@@ -186,12 +284,13 @@ const AddProduct = () => {
                   >
                     <Select
                       showSearch
-                      placeholder="Select a category"
+                      placeholder="Select a subcategory"
                       optionFilterProp="children"
                       filterOption={(input, option) =>
                         (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
-                      options={categoryList}
+                      options={subCategoryList}
+
                     />
                   </Form.Item>
                   <Form.Item
@@ -200,25 +299,25 @@ const AddProduct = () => {
                     hasFeedback
                     rules={[
                       {
-                        validator:(_,value)=>{
+                        validator: (_, value) => {
                           const regex = /^[1-9]\d*$/;
-                           if(!regex.test(value)){
+                          if (!regex.test(value)) {
                             return Promise.reject('Please enter only numeric values');
-                           }
-                           else if(value.length > 10){
+                          }
+                          else if (value.length > 10) {
                             return Promise.reject('Please enter max length 10');
-                           }
-                           else if(value.length<2){
+                          }
+                          else if (value.length < 2) {
                             return Promise.reject('Please enter min length 2');
-                           }else{
-                             return Promise.resolve();
-                           }
+                          } else {
+                            return Promise.resolve();
+                          }
                         }
-                      },{
-                        required:true,
-                        message:""
+                      }, {
+                        required: true,
+                        message: ""
                       }
-                      ]}
+                    ]}
                   >
                     <Input placeholder="Enter regular Price" />
                   </Form.Item>
@@ -227,26 +326,53 @@ const AddProduct = () => {
                     name="selling_price"
                     hasFeedback
                     rules={[
-                    {
-                      validator:(_,value)=>{
-                        const regex = /^[1-9]\d*$/;
-                         if(!regex.test(value)){
-                          return Promise.reject('Please enter only numeric values');
-                         }
-                         else if(value.length > 10){
-                          return Promise.reject('Please enter max length 10');
-                         }
-                         else if(value.length<2){
-                          return Promise.reject('Please enter min length 2');
-                         }else{
-                           return Promise.resolve();
-                         }
+                      {
+                        validator: (_, value) => {
+                          const regex = /^[1-9]\d*$/;
+                          if (!regex.test(value)) {
+                            return Promise.reject('Please enter only numeric values');
+                          }
+                          else if (value.length > 10) {
+                            return Promise.reject('Please enter max length 10');
+                          }
+                          else if (value.length < 2) {
+                            return Promise.reject('Please enter min length 2');
+                          } else {
+                            return Promise.resolve();
+                          }
+                        }
+                      },
+                      {
+                        required: true,
+                        message: ""
                       }
-                    },
-                    {
-                      required:true,
-                      message:""
-                    }
+                    ]}
+
+                  >
+                    <Input placeholder="Enter selling Price" />
+                  </Form.Item>
+                  <Form.Item
+                    label="Quantity"
+                    name="quantity"
+                    hasFeedback
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          const regex = /^[1-9]\d*$/;
+                          if (!regex.test(value)) {
+                            return Promise.reject('Please enter only numeric values');
+                          }
+                          else if (value.length < 2) {
+                            return Promise.reject('Please enter min length 2');
+                          } else {
+                            return Promise.resolve();
+                          }
+                        }
+                      },
+                      {
+                        required: true,
+                        message: ""
+                      }
                     ]}
 
                   >
@@ -265,26 +391,26 @@ const AddProduct = () => {
           <div className='col-md-4'>
             <Space direction="vertical">
               <Card title="Product Image" className='mb-3'>
-              <Form.Item
-                                name="image"
-                                label="Main Product Image"
-                                size={'large'}
-                                hasFeedback={true}
-                                rules={[
-                                  {
-                                    validator: (_, value) => {
-                                      if (fileList.length < 1) {
-                                        return Promise.reject('Please choose product image');
-                                      }
-                                      return Promise.resolve();
-                                    },
-                                  },
-                                  {
-                                    required: true,
-                                    message:""
-                                  }
-                                ]}
-                              >
+                <Form.Item
+                  name="image"
+                  label="Main Product Image"
+                  size={'large'}
+                  hasFeedback={true}
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (fileList.length < 1) {
+                          return Promise.reject('Please choose product image');
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      required: true,
+                      message: ""
+                    }
+                  ]}
+                >
                   <Upload
                     listType="picture-card"
                     fileList={fileList}
@@ -303,20 +429,20 @@ const AddProduct = () => {
                   label="Product Gallery Images"
                   size={'large'}
                   hasFeedback={true}
-                                rules={[
-                                  {
-                                    validator: (_, value) => {
-                                      if (fileList.length < 1) {
-                                        return Promise.reject('Please choose product gallery image');
-                                      }
-                                      return Promise.resolve();
-                                    },
-                                  },
-                                  {
-                                    required: true,
-                                    message:""
-                                  }
-                                ]}
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (fileList.length < 1) {
+                          return Promise.reject('Please choose product gallery image');
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      required: true,
+                      message: ""
+                    }
+                  ]}
                 >
                   <Upload
                     multiple={true}
@@ -328,6 +454,18 @@ const AddProduct = () => {
                     {fileListGallery.length < 10 && '+ Upload'}
                   </Upload>
 
+                </Form.Item>
+              </Card>
+            </Space>
+            <Space direction='horizontal'>
+              <Card title="Promotions and Product Status" className='mb-3'>
+                <Form.Item
+                  name="promotions"
+                  label="Product Status"
+                  size={'large'}
+                  hasFeedback={true}
+                >
+                  <Checkbox.Group options={options} onChange={onChangePromotions} />
                 </Form.Item>
               </Card>
             </Space>
