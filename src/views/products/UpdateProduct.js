@@ -4,16 +4,14 @@ import Editor from '../../components/product/Editor';
 import { fetchAllCategory } from '../../redux/thunks/categoryThunk';
 import {fetchAllBrand} from '../../redux/thunks/brandThunk';
 import { fetchAllSubCategory } from '../../redux/thunks/subCategoryThunk';
-import { createProduct } from '../../redux/thunks/productThunk';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-
+import { createProduct,productDetails } from '../../redux/thunks/productThunk';
+import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import "./product.scss";
 
 const AddProduct = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const [variants,setVariants] = useState(false);
   const [editorData, setEditorData] = useState('');
   const [editorError, setEditorError] = useState(null);
   const [shortEditorData, setShortEditorData] = useState('');
@@ -26,7 +24,9 @@ const AddProduct = () => {
   const [fileListGallery, setFileListGallery] = useState([]);
   const subcategoryState = useSelector(state => state.subcategory);
   const productState = useSelector(state => state.product);
-
+  const [defaultOption, setDefaultOption] = useState([]);
+  const [productDetailsData ,setProductDetails] = useState(productState);
+  const params = useParams()
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
@@ -47,7 +47,21 @@ const AddProduct = () => {
     const imgWindow = window.open(src);
     imgWindow?.document.write(image.outerHTML);
   };
-
+  useEffect(() => {
+    if (productDetailsData.data) {
+        form.setFieldsValue({
+            name: productDetailsData.data?.name,
+            description: productDetailsData.data?.description,
+            shortDescription: productDetailsData.data?.shortDescription,
+            brand: productDetailsData.data?.brand?.name,
+            category: productDetailsData.data?.category?.name,
+            subcategory: productDetailsData.data?.subCategory?.name,
+            regular_price: productDetailsData.data?.regularPrice,
+            selling_price: productDetailsData.data?.sellingPrice,
+            quantity: productDetailsData.data?.quantity,
+        });
+    }
+}, [productDetailsData, form]);
   useEffect(() => {
     dispatch(fetchAllCategory()).then((res) => {
       if (res.payload.success) {
@@ -87,6 +101,22 @@ const AddProduct = () => {
     }).catch((err) => {
       message.error(err.message);
     });
+    dispatch(productDetails(params.productId)).then((res) => {
+        if (res.payload.success) {
+            setProductDetails(res.payload);
+            handleDefaultOption(res.payload);
+        } else {
+          if (res.payload.errors) {
+            res.payload.errors.forEach((err) => {
+              message.error(err.msg);
+            });
+          } else {
+            message.error(res.payload.message);
+          }
+        }
+      }).catch((err) => {
+        message.error(err.message);
+      });
   }, [dispatch]);
 
   const onFinish = (values) => {
@@ -104,11 +134,10 @@ const AddProduct = () => {
     formData.append('description', values.description);
     formData.append('shortDescription', values.shortDescription);
     formData.append('category', values.category);
-    formData.append('variant', values.variant);
     formData.append('code', 'PRO-001');
-    // formData.append('sellingPrice', values.selling_price);
-    // formData.append('regularPrice', values.regular_price);
-    // formData.append('quantity', values.quantity);
+    formData.append('sellingPrice', values.selling_price);
+    formData.append('regularPrice', values.regular_price);
+    formData.append('quantity', values.quantity);
     if (values.subcategoy) {
       formData.append('subcategory', values.subcategory);
     }
@@ -123,15 +152,6 @@ const AddProduct = () => {
     values.promotions.forEach((item) => {
       formData.append(item, true);
     });
-    // values.variants.forEach((variant, index) => {
-    //   formData.append(`variants[${index}].size`, variant.size);
-    //   formData.append(`variants[${index}].regularPrice`, variant.regularPrice);
-    //   formData.append(`variants[${index}].sellingPrice`, variant.sellingPrice);
-    //   formData.append(`variants[${index}].quantity`, variant.quantity);
-    //   formData.append(`variants[${index}].quantity`, variant.quantity);
-    //   formData.append(`variants[${index}].uom`, values.variant);
-    // });
-    formData.append('variants', JSON.stringify(values.variants));
 
     dispatch(createProduct(formData)).then((res) => {
       if (res.payload.success) {
@@ -192,19 +212,6 @@ const AddProduct = () => {
       message.error(err.message);
     });
   }
-  useEffect(() => {
-    form.setFieldsValue({
-      variants: [
-        {
-          size: '',
-          regular_price: '',
-          selling_price: '',
-          quantity: '',
-          uom: ''
-        }
-      ]
-    });
-  }, [form,variants]);
 
   const options = [
     {
@@ -224,83 +231,19 @@ const AddProduct = () => {
       value: 'trend',
     },
   ];
-  const variantOption = [
-    {
-      label: 'Kilogram',
-      value: 'kg',
-    },
-    {
-      label: 'Liter',
-      value: 'ltr',
-    },
-    {
-      label: 'Milliliter',
-      value: 'ml',
-    },
-    {
-      label: 'Dozen',
-      value: 'dozens',
-    },
-    {
-      label: 'Piece',
-      value: 'pcs',
-    },
-    {
-      label: 'Gram',
-      value: 'g',
-    },
-    {
-      label: 'Meter',
-      value: 'm',
-    },
-    {
-      label: 'Centimeter',
-      value: 'cm',
-    },
-    {
-      label: 'Millimeter',
-      value: 'mm',
-    },
-    {
-      label: 'Inch',
-      value: 'in',
-    },
-    {
-      label: 'Foot',
-      value: 'ft',
-    },
-    {
-      label: 'Yard',
-      value: 'yd',
-    },
-    {
-      label: 'Gallon',
-      value: 'gal',
-    },
-    {
-      label: 'Pint',
-      value: 'pt',
-    },
-    {
-      label: 'Ounce',
-      value: 'oz',
-    },
-    {
-      label: 'Pound',
-      value: 'lb',
-    },
-    {
-      label: 'Cubic Meter',
-      value: 'm³',
-    },
-    {
-      label: 'Square Meter',
-      value: 'm²',
-    }
-  ];
-  
+
+  const handleDefaultOption = ({ data }) => {
+    const arr = [];
+    const { hotNew, hotDeal, bestRated, trend } = data || {};
+    if (hotNew) arr.push('hotNew');
+    if (hotDeal) arr.push('hotDeal');
+    if (bestRated) arr.push('bestRated');
+    if (trend) arr.push('trend');
+    setDefaultOption(arr)
+};
+console.log(defaultOption,' defai')
   const onChangePromotions = (promotions) => {
-    console.log(promotions, ' promotions')
+    // console.log(promotions, ' promotions')
   }
   return (
     <div className="row">
@@ -312,11 +255,12 @@ const AddProduct = () => {
         onValuesChange={onValuesChange}
         autoComplete="off"
         className="col-md-12"
+        
       >
         <div className='row'>
           <div className='col-md-8 mb-3'>
             <Space direction="vertical" size={20}>
-              <Card title="Add New Product">
+              <Card title="Update Product">
                 <Form.Item
                   name="name"
                   label="Product Title"
@@ -326,7 +270,7 @@ const AddProduct = () => {
                     { required: true, message: 'Please enter product name', min: 6 },
                   ]}
                 >
-                  <Input placeholder="Please enter Product name" />
+                  <Input placeholder="Please enter Product name"/>
                 </Form.Item>
 
                 <Form.Item
@@ -351,7 +295,7 @@ const AddProduct = () => {
                     }
                   ]}
                 >
-                  <Editor handleEditorChange={handleEditorChange} />
+                  <Editor handleEditorChange={handleEditorChange} data={productDetailsData.data?.description}/>
                 </Form.Item>
                 <Form.Item
                   name="shortDescription"
@@ -375,7 +319,7 @@ const AddProduct = () => {
                     }
                   ]}
                 >
-                  <Editor handleEditorChange={handleEditorChangeShort} />
+                  <Editor handleEditorChange={handleEditorChangeShort} data={productDetailsData.data?.shortDescription}/>
                 </Form.Item>
                 <Space direction="horizontal">
                 <Form.Item
@@ -430,86 +374,9 @@ const AddProduct = () => {
 
                     />
                   </Form.Item>
-                 
                   <Form.Item
-                    name="variant"
-                    label="Select Variants"
-                    size="large"
-                  >
-                    <Select
-                      
-                      showSearch
-                      placeholder="Select a variants"
-                      optionFilterProp="children"
-                      filterOption={(input, option) =>
-                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                      }
-                      onChange={()=>setVariants(true)}
-                      options={variantOption}
-
-                    />
-          </Form.Item>
-  {
-    variants?<>
-    <Form.List name="variants">
-      {(fields, { add, remove }) => (
-        <>
-         <Space 
-            direction='horizontal'
-            style={{ 
-               
-               display: 'flex', 
-              justifyContent: 'flex-end'
-            }}
-            >
-          <Form.Item>
-            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-              Add field
-            </Button>
-          </Form.Item>
-            </Space>
-          {fields.map(({ key, name, ...restField }) => (<>
-           
-            <Space
-              key={key}
-              style={{
-                display: 'flex',
-                marginBottom: 8,
-              }}
-              align="baseline"
-            >
-               <Form.Item
-                  {...restField}
-                    label="Size"
-                    name={[name, 'size']}
-                    hasFeedback
-                    rules={[
-                      {
-                        validator: (_, value) => {
-                          const regex = /^[1-9]\d*$/;
-                          if (!regex.test(value)) {
-                            return Promise.reject('Please enter only numeric values');
-                          }
-                          else if (value.length < 2) {
-                            return Promise.reject('Please enter min length 2');
-                          } else {
-                            return Promise.resolve();
-                          }
-                        }
-                      },
-                      {
-                        required: true,
-                        message: ""
-                      }
-                    ]}
-
-                  >
-                    <Input placeholder="Enter size" />
-                  </Form.Item>
-               <Form.Item
-                    {...restField}
                     label="Regular Price"
-                    name={[name,"regularPrice"]}
+                    name="regular_price"
                     hasFeedback
                     rules={[
                       {
@@ -536,9 +403,8 @@ const AddProduct = () => {
                     <Input placeholder="Enter regular Price" />
                   </Form.Item>
                   <Form.Item
-                    {...restField}
                     label="Selling Price"
-                    name={[name,'sellingPrice']}
+                    name="selling_price"
                     hasFeedback
                     rules={[
                       {
@@ -567,9 +433,8 @@ const AddProduct = () => {
                     <Input placeholder="Enter selling Price" />
                   </Form.Item>
                   <Form.Item
-                  {...restField}
                     label="Quantity"
-                    name={[name, 'quantity']}
+                    name="quantity"
                     hasFeedback
                     rules={[
                       {
@@ -592,31 +457,13 @@ const AddProduct = () => {
                     ]}
 
                   >
-                    <Input placeholder="Enter Unit" />
+                    <Input placeholder="Enter selling Price" />
                   </Form.Item>
-             
-              {fields.length > 1 ? (
-                  <MinusCircleOutlined
-                    className="dynamic-delete-button"
-                    onClick={() => remove(name)}
-                  />
-                ) : null}
-            </Space>
-            </>
-          ))}
-          
-        </>
-      )}
-    </Form.List>
-    </>:""
-  }
-
-
                 </Space>
 
                 <Form.Item>
                   <Button type="primary" htmlType="submit" loading={productState.isLoading}>
-                    Submit
+                    Update
                   </Button>
                 </Form.Item>
               </Card>
@@ -699,7 +546,7 @@ const AddProduct = () => {
                   size={'large'}
                   hasFeedback={true}
                 >
-                  <Checkbox.Group options={options} onChange={onChangePromotions} />
+                  <Checkbox.Group options={options}  value={defaultOption} />
                 </Form.Item>
               </Card>
             </Space>

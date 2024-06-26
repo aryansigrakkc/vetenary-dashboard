@@ -20,6 +20,13 @@ const fetchBrand = createAsyncThunk(
     return response.data;
   }
 );
+const fetchAllBrand = createAsyncThunk(
+  "fetch/all/brand",
+  async () => {
+    const response = await utility.get(`brand/fetch/all/brand`);
+    return response.data;
+  }
+);
 
 const fetchInactiveBrand = createAsyncThunk(
   "brand/inactive",
@@ -82,4 +89,4 @@ const updateBrand = createAsyncThunk(
 );
 
 
-export  {createBrand,fetchBrand,changeBrandStatus,fetchInactiveBrand,fetchDeletedBrand,restoreBrand,deleteBrand,changeBrandImage,updateBrand};
+export  {createBrand,fetchBrand,fetchAllBrand,changeBrandStatus,fetchInactiveBrand,fetchDeletedBrand,restoreBrand,deleteBrand,changeBrandImage,updateBrand};

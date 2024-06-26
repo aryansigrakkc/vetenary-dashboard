@@ -1,5 +1,4 @@
 import React from 'react'
-import Login from './views/pages/login/Login'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -8,9 +7,10 @@ const Typography = React.lazy(() => import('./views/theme/typography/Typography'
 // Product
 const AllProducts = React.lazy(() => import('./views/products/AllProducts'))
 const AddProduct = React.lazy(() => import('./views/products/AddProduct'))
+const ViewProduct = React.lazy(() => import('./views/products/ViewProduct'))
+const UpdateProduct = React.lazy(() => import('./views/products/UpdateProduct'))
 
 // Category
-
 const Category = React.lazy(() => import('./views/products/Category'))
 const SubCategory = React.lazy(() => import('./views/products/SubCategory'))
 const Brand = React.lazy(() => import('./views/products/Brand'))
@@ -67,6 +67,8 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/all/products', name: 'All Products', element: AllProducts },
   { path: '/add/product', name: 'Add Products', element: AddProduct },
+  { path: '/view/product/:productId', name: 'View Product', element: ViewProduct },
+  { path: '/update/product/:productId', name: 'Update Product', element: UpdateProduct },
   { path: '/all/categories', name: 'Categories', element: Category },
   { path: '/all/subcategories', name: 'SubCategories', element: SubCategory },
   { path: '/all/brand', name: 'Brand', element: Brand },

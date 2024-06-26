@@ -1,11 +1,7 @@
 // /*server address for api call*/
-export const serverAddress = "http://localhost:3003";
-// export const serverAddress = "http://13.232.204.13:3000";
-// export const serverAddress = "http://65.0.20.207:3000";
-// export const serverAddress = "http://13.232.217.16:3000";
-
-// export const mongoserverAddress = "http://localhost:3002";
-// export const mongoserverAddress = "http://163.53.86.182:3002";
+export const API_BASE_URL = 'http://localhost:8080/api/v1/';
+// export const API_BASE_URL = 'https://dev.udiseapis.staggings.in/api/v1',
+export const BASE_URL = 'http://localhost:8080/';
 
 /* user roles  */
 export const ROLE = {

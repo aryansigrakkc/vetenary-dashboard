@@ -7,6 +7,7 @@ import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCatego
 
 import { fetchProduct } from '../../redux/thunks/productThunk';
 import dayjs from 'dayjs'
+import { Link } from 'react-router-dom';
 const AllProducts = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
@@ -19,7 +20,7 @@ const AllProducts = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const categories = useSelector(state => state.category);
-  const products = useSelector(state => state.product);
+  const products = useSelector(state => state.product.data);
   const [filterStatus, setFilterStatus] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isActiveModalOpen, setIsActiveModalOpen] = useState(false);
@@ -319,10 +320,10 @@ const AllProducts = () => {
       render: (_, value) => {
         if (filterStatus === "All") {
           return (<>
-            <Flex wrap gap="small" className="site-button-ghost-wrapper">
+            <Flex wrap gap="small" className="">
 
-              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Category'} />
-              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleCategoryUpdate(value._id)} title={'Edit Category'} />
+              <Link to={`/view/product/${value._id}`}><Button size={'small'} icon={<EyeOutlined />} primary title={'View Product'} /></Link>
+              <Link to={`/update/product/${value._id}`}><Button size={'small'} icon={<SignatureOutlined />} title={'Edit Product'} /></Link>
               <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete Category'} />
             </Flex>
           </>)
@@ -336,14 +337,14 @@ const AllProducts = () => {
 
   ];
   const arr = [];
-  products?.data?.data?.forEach((item, idx) => {
+  products?.data?.forEach((item, idx) => {
     arr.push({
       _id: item._id,
       sno: (idx + sno + 1),
       name: item.name,
       image: `http://localhost:8080/${item.image}`,
       status: item.status,
-      createdAt: (dayjs(item.timeStamps).format('DD/MM/YY')),
+      createdAt: (dayjs(item.timeStamps).format('DD/MM/YY hh:mm a')),
       isDeleted: item.isDeleted,
       action: item
     })

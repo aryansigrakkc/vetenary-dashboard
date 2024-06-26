@@ -28,6 +28,14 @@ const fetchAllProduct = createAsyncThunk(
   }
 );
 
+const productDetails = createAsyncThunk(
+  "product/details-product",
+  async (productId) => {
+    const response = await utility.get(`product/get/product/details/${productId}`);
+    return response.data;
+  }
+);
+
 const fetchInactiveProduct = createAsyncThunk(
   "product/inactive",
   async ({activepage,recperpage}) => {
@@ -89,4 +97,4 @@ const updateProduct = createAsyncThunk(
 );
 
 
-export  {createProduct,fetchProduct,fetchAllProduct,changeProductStatus,fetchInactiveProduct,fetchDeletedProduct,restoreProduct,deleteProduct,changeProductImage,updateProduct};
+export  {createProduct,fetchProduct,fetchAllProduct,changeProductStatus,fetchInactiveProduct,fetchDeletedProduct,restoreProduct,deleteProduct,changeProductImage,updateProduct,productDetails};

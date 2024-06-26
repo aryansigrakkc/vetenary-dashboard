@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { changeProductStatus, createProduct,fetchProduct,fetchDeletedProduct,fetchInactiveProduct,restoreProduct,deleteProduct,changeProductImage, updateProduct } from "../thunks/productThunk";
+import { changeProductStatus, createProduct,fetchProduct,productDetails,fetchDeletedProduct,fetchInactiveProduct,restoreProduct,deleteProduct,changeProductImage, updateProduct } from "../thunks/productThunk";
 
 const productSlice = createSlice({
   name: "Admin/Product",
@@ -33,6 +33,19 @@ const productSlice = createSlice({
         state.data = action.payload;
       })
       .addCase(fetchProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+      })
+
+      /*-----------Fetch  Product Details---------------*/ 
+      .addCase(productDetails.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(productDetails.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.data = action.payload;
+      })
+      .addCase(productDetails.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
       })
