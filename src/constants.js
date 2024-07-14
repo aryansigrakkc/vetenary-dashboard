@@ -1,5 +1,5 @@
 // /*server address for api call*/
-export const API_BASE_URL = 'http://localhost:3600/api/v1/'
+export const API_BASE_URL = 'http://localhost:8080/api/v1/'
 // export const API_BASE_URL = 'https://dev.udiseapis.staggings.in/api/v1',
 export const BASE_URL = 'http://localhost:8080/'
 

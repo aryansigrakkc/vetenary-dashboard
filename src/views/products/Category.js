@@ -1,14 +1,18 @@
+/* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal } from 'antd';
+import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal,Badge } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCategory, fetchInactiveCategory, restoreCategory, deleteCategory,changeCategoryImage, updateCategory } from '../../redux/thunks/categoryThunk'
+import InputSearchField from '../../components/search/InputSearchField';
 import dayjs from 'dayjs'
+const {Search} = Input;
 const Category = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
   const [currentPage,setCurrentPage] = useState(1);
+  const [inputSearch,setInputSearch] = useState("");
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -31,7 +35,8 @@ const Category = () => {
     }else{
       handleDeletedCategory();
     }
-  }, [activepage, recperpage]);
+     }, [activepage, recperpage,inputSearch]);
+
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
   };
@@ -112,7 +117,7 @@ const Category = () => {
   };
 
   const fetchAllCategory = () => {
-    dispatch(fetchCategory({ activepage, recperpage })).then((res) => {
+    dispatch(fetchCategory({ activepage,recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -120,7 +125,6 @@ const Category = () => {
       }
     });
   }
-
   const showDrawer = () => {
     setOpen(true);
   };
@@ -209,11 +213,14 @@ const Category = () => {
       dispatch(changeCategoryStatus(obj)).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchInactiveCategory({ activepage, recperpage }))
+          dispatch(fetchInactiveCategory({ activepage, recperpage,inputSearch }))
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          res.payload?.errors ? res.payload.errors.forEach((err) => {
+            message.error(err);
+          }) : message.error(res.payload.message);
+  
         }
       })
 
@@ -221,7 +228,7 @@ const Category = () => {
       dispatch(restoreCategory({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedCategory({ activepage, recperpage }));
+          handleDeletedCategory();
           setType("");
         } else {
           setType("");
@@ -365,7 +372,7 @@ const Category = () => {
   }
 
   const handleInactiveCategory = ()=>{
-    dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
+    dispatch(fetchInactiveCategory({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -376,8 +383,7 @@ const Category = () => {
     });
   }
   const handleDeletedCategory = ()=>{
-    dispatch(fetchDeletedCategory({ activepage, recperpage })).then((res) => {
-      console.log(res)
+    dispatch(fetchDeletedCategory({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -435,7 +441,6 @@ const Category = () => {
     })
   };
   
-
   return (
     <>
       <div className='container'>
@@ -464,18 +469,22 @@ const Category = () => {
                   }
                 ]}
               />
-
+              <div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
-                <Radio value={'All'}>All</Radio>
-                <Radio value={'Inactive'}>Inactive</Radio>
-                <Radio value={'Deleted'}>Deleted</Radio>
-              </Radio.Group>
-              <Button
-                type="primary"
-                size={'small'}
-                icon={<PlusOutlined />}
-                onClick={() => showDrawer()}
-              />
+                              <Radio value={'All'}>All {filterStatus==="All"?<Badge count={categories?.data?.totalRecords} color='green'/>:''}</Radio>
+                              <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={categories?.data?.totalRecords} color='yellow'/>:''}</Radio>
+                              <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={categories?.data?.totalRecords} color='red'/>:''}</Radio>
+                            </Radio.Group>
+                            <div className='search-field ms-3 me-3'>
+                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={categories.isLoading}/>
+                            </div>
+                            <Button
+                              type="primary"
+                              size={'small'}
+                              icon={<PlusOutlined />}
+                              onClick={() => showDrawer()}
+                            />
+                </div>            
             </div>
             <div className=''>
               <Drawer

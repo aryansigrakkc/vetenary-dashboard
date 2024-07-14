@@ -1,3 +1,6 @@
+import { API_BASE_URL } from "../constants";
+
+/* eslint-disable prettier/prettier */
 export function compareJSONObject(object1, object2, element, jsonObject) {
     /**
      * Code to compare values of two equivalent JSON object.
@@ -54,4 +57,16 @@ export function getNameAttributes(name) {
             last_name: _name[_name.length - 1]
         }
     }
+}
+
+export function apiWithParams(params,endPoint){
+    console.log(params,' params')
+    const url = new URL(API_BASE_URL+endPoint);
+    Object.keys(params).forEach(key => {
+        if (params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
+        }
+    });
+    console.log(url.toString(),' inactive category')
+    return url.toString();
 }

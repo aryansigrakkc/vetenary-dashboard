@@ -1,5 +1,7 @@
+/* eslint-disable prettier/prettier */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import utility from "../../services/utility";
+import { apiWithParams } from "../../utils";
 
 const createCategory = createAsyncThunk(
   "category/create",
@@ -15,31 +17,35 @@ const createCategory = createAsyncThunk(
 
 const fetchCategory = createAsyncThunk(
   "category/all",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`category/all/category?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+  const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/all/category`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 const fetchAllCategory = createAsyncThunk(
   "category/all-category",
-  async () => {
-    const response = await utility.get(`category/fetch/category`);
+  async (name) => {
+    const url = apiWithParams({name},`category/fetch/category`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 
 const fetchInactiveCategory = createAsyncThunk(
   "category/inactive",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`category/get-all-inactive/category?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/get-all-inactive/category`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 
 const fetchDeletedCategory = createAsyncThunk(
   "category/deleted",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`category/get-all-deleted/category?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/get-all-deleted/category`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
