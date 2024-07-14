@@ -2,17 +2,22 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal,Badge } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
+import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined,FileExcelOutlined,FilePdfOutlined,FileOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategory, createCategory, changeCategoryStatus, fetchDeletedCategory, fetchInactiveCategory, restoreCategory, deleteCategory,changeCategoryImage, updateCategory } from '../../redux/thunks/categoryThunk'
 import InputSearchField from '../../components/search/InputSearchField';
 import dayjs from 'dayjs'
-const {Search} = Input;
+import { errorMessage } from '../../utils';
+import utility from '../../services/utility';
+import FileSaver from 'file-saver';
+
+
 const Category = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
   const [currentPage,setCurrentPage] = useState(1);
   const [inputSearch,setInputSearch] = useState("");
+  const [loading,setLoading] = useState({excel:false,pdf:false,csv:false});
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -76,7 +81,7 @@ const Category = () => {
       } else {
         res.payload?.errors ? res.payload.errors.forEach((err) => {
           message.error(err);
-        }) : message.error(res.payload.message);
+        }) : errorMessage(res);;
 
       }
     }).catch(err => {
@@ -103,7 +108,7 @@ const Category = () => {
       } else {
         res.payload?.errors ? res.payload.errors.forEach((err) => {
           message.error(err);
-        }) : message.error(res.payload.message);
+        }) : errorMessage(res);;
         fetchAllCategory();
       }
     }).catch(err => {
@@ -121,7 +126,7 @@ const Category = () => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        message.error(res.payload.message)
+        errorMessage(res);
       }
     });
   }
@@ -194,7 +199,7 @@ const Category = () => {
           })
           fetchAllCategory();
         } else {
-          message.error(res.payload.message);
+          errorMessage(res);;
         }
 
       }
@@ -219,7 +224,7 @@ const Category = () => {
           setType("");
           res.payload?.errors ? res.payload.errors.forEach((err) => {
             message.error(err);
-          }) : message.error(res.payload.message);
+          }) : errorMessage(res);;
   
         }
       })
@@ -232,7 +237,7 @@ const Category = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
         }
       });
     }
@@ -244,7 +249,7 @@ const Category = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
           fetchAllCategory();
         }
       });
@@ -376,9 +381,7 @@ const Category = () => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
       }
     });
   }
@@ -387,9 +390,7 @@ const Category = () => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
       }
     }).catch(err => {
       
@@ -433,7 +434,7 @@ const Category = () => {
       } else {
         res.payload?.errors ? res.payload.errors.forEach((err) => {
           message.error(err);
-        }) : message.error(res.payload.message);
+        }) : errorMessage(res);;
 
       }
     }).catch(err => {
@@ -441,12 +442,40 @@ const Category = () => {
     })
   };
   
+  const downloadExcel = async () => {
+    try {
+      setLoading({...loading,excel:true});
+      const response = await utility.get('/category/export/excel/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-category.xlsx`);
+      setLoading({...loading,excel:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      setLoading({...loading,pdf:true});
+      const response = await utility.get('/category/export/pdf/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, 'sample.pdf');
+      setLoading({...loading,pdf:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
   return (
     <>
       <div className='container'>
         <div className='row'>
           <div className="col-md-12">
             <div className='d-flex justify-content-between  mb-2'>
+              <div className='d-flex justify-content-start'>
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
@@ -469,11 +498,15 @@ const Category = () => {
                   }
                 ]}
               />
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Export</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>Export</Button>
+              <Button type="dashed" onClick={downloadExcel} className='ms-3' icon={<FileOutlined />}>Export</Button>
+              </div>
               <div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
-                              <Radio value={'All'}>All {filterStatus==="All"?<Badge count={categories?.data?.totalRecords} color='green'/>:''}</Radio>
-                              <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={categories?.data?.totalRecords} color='yellow'/>:''}</Radio>
-                              <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={categories?.data?.totalRecords} color='red'/>:''}</Radio>
+                              <Radio value={'All'}>All {filterStatus==="All"?<Badge count={categories?.data?.totalRecords??0} color='green'/>:''}</Radio>
+                              <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={categories?.data?.totalRecords??0} color='yellow'/>:''}</Radio>
+                              <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={categories?.data?.totalRecords??0} color='red'/>:''}</Radio>
                             </Radio.Group>
                             <div className='search-field ms-3 me-3'>
                             <InputSearchField  setInputSearch={setInputSearch} loadingStatus={categories.isLoading}/>

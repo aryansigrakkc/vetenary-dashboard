@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
 import { Form, Input, message, Space, Card, Checkbox } from 'antd';
 import { productDetails } from '../../redux/thunks/productThunk';
@@ -17,7 +18,6 @@ const ViewProduct = () => {
     const params = useParams()
     useEffect(() => {
         Fancybox.bind("[data-fancybox]", {
-
         });
         return () => {
             Fancybox.destroy();
@@ -26,7 +26,7 @@ const ViewProduct = () => {
     useEffect(() => {
         const fetchProductDetails = async () => {
             try {
-                const res = await dispatch(productDetails(params.productId));
+                const res = await dispatch(productDetails(params?.productId));
                 if (res.payload.success) {
                     message.success(res.payload.message);
                     handleDefaultOption(res.payload);
@@ -47,7 +47,7 @@ const ViewProduct = () => {
         if (params.productId) {
             fetchProductDetails();
         }
-    }, [dispatch, params.productId]);
+    }, [dispatch,params]);
     const options = [
         {
             label: 'Hot Deal',

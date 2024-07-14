@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-duplicate-props */
 /* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 import React, { useCallback } from 'react'
@@ -20,7 +21,7 @@ const InputSearchField = ({setInputSearch,loadingStatus}) => {
     debouncedFetchData(value); 
   }
   return (<>
-            <Search placeholder="Search..." size='medium' loading={false} onChange={handleInputSearch} allowClear loading={loadingStatus}/>
+            <Search placeholder="Search..." size='medium' onChange={handleInputSearch} allowClear loading={loadingStatus}/>
   </>)
 }
 

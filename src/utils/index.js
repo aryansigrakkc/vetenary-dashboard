@@ -70,3 +70,9 @@ export function apiWithParams(params,endPoint){
     console.log(url.toString(),' inactive category')
     return url.toString();
 }
+
+export function errorMessage(res){
+    res.payload?.errors ? res.payload.errors.forEach((err) => {
+        message.error(err);
+      }) : message.error(res.payload.message);
+}
