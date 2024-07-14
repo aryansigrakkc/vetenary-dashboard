@@ -469,6 +469,20 @@ const Category = () => {
       console.error('Error downloading the file', error);
     }
   };
+  const downloadCSV = async () => {
+    try {
+      setLoading({...loading,csv:true});
+      const response = await utility.get('/category/export/csv/category', {
+        responseType: 'blob', 
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      FileSaver.saveAs(blob,'category-data.csv');
+      setLoading({...loading,csv:false});
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
   return (
     <>
       <div className='container'>
@@ -498,9 +512,9 @@ const Category = () => {
                   }
                 ]}
               />
-              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Export</Button>
-              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>Export</Button>
-              <Button type="dashed" onClick={downloadExcel} className='ms-3' icon={<FileOutlined />}>Export</Button>
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Excel</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>PDF</Button>
+              <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
               </div>
               <div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
