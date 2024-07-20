@@ -432,9 +432,7 @@ const Category = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : errorMessage(res);;
+        errorMessage(res);
 
       }
     }).catch(err => {
@@ -485,7 +483,7 @@ const Category = () => {
 
   return (
     <>
-      <div className='container'>
+      <div className='container-fluid'>
         <div className='row'>
           <div className="col-md-12">
             <div className='d-flex justify-content-between  mb-2'>

@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal } from 'antd';
+import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal,Badge } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
+import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined,FileExcelOutlined,FilePdfOutlined,FileOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSubCategory, createSubCategory, changeSubCategoryStatus, fetchDeletedSubCategory, fetchInactiveSubCategory, restoreSubCategory, deleteSubCategory, changeSubCategoryImage, updateSubCategory } from '../../redux/thunks/subCategoryThunk';
 
 import { fetchAllCategory } from '../../redux/thunks/categoryThunk';
 import dayjs from 'dayjs'
-
+import { errorMessage } from '../../utils';
+import utility from '../../services/utility';
+import FileSaver from 'file-saver';
+import InputSearchField from '../../components/search/InputSearchField';
 const SubCategory = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
+  const [currentPage,setCurrentPage] = useState(1);
+  const [inputSearch,setInputSearch] = useState("");
+  const [loading,setLoading] = useState({excel:false,pdf:false,csv:false});
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -33,7 +39,7 @@ const SubCategory = () => {
     } else {
       handleDeletedSubCategory();
     }
-  }, [activepage, recperpage]);
+  }, [activepage, recperpage,inputSearch]);
 
   useEffect(()=>{
     dispatch(fetchAllCategory()).then((res)=>{
@@ -54,7 +60,7 @@ const SubCategory = () => {
 
       }
     }).catch((err) => {
-      message.error(err.message);
+      errorMessage(res);
     });
   },[]);
 
@@ -97,13 +103,11 @@ const SubCategory = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
 
       }
     }).catch(err => {
-      message.error(err.message);
+      errorMessage(res);
     })
   };
 
@@ -125,14 +129,12 @@ const SubCategory = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
         fetchAllSubCategory();
       }
     }).catch(err => {
       fetchAllSubCategory();
-      message.error(err.message);
+      errorMessage(res);
     })
   };
 
@@ -141,11 +143,11 @@ const SubCategory = () => {
   };
 
   const fetchAllSubCategory = () => {
-    dispatch(fetchSubCategory()).then((res) => {
+    dispatch(fetchSubCategory({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        message.error(res.payload.message)
+        errorMessage(res);
       }
     });
   }
@@ -198,6 +200,7 @@ const SubCategory = () => {
   function paginationHandler(page, pageSize) {
     SetRecPerPage(pageSize);
     SetActivePage(page);
+    setCurrentPage(page);
   }
 
   const handleSubCategoryStatus = (id, status) => {
@@ -211,18 +214,12 @@ const SubCategory = () => {
         message.success(res.payload.message);
         fetchAllSubCategory();
       } else {
-        if (res.payload.errors) {
-          res.payload.errors.forEach((err) => {
-            message.error(err.msg);
-          })
-          fetchAllSubCategory();
-        } else {
-          message.error(res.payload.message);
-        }
+        errorMessage(res);
+        fetchAllSubCategory();
 
       }
     }).catch((err) => {
-      message.error(err.message);
+      errorMessage(res);
     })
 
   }
@@ -240,7 +237,7 @@ const SubCategory = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
         }
       })
 
@@ -248,11 +245,11 @@ const SubCategory = () => {
       dispatch(restoreSubCategory({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedSubCategory({ activepage, recperpage }));
+          handleDeletedSubCategory();
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
         }
       });
     }
@@ -264,7 +261,7 @@ const SubCategory = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
           fetchAllSubCategory();
         }
       });
@@ -399,6 +396,8 @@ const SubCategory = () => {
   const handleSubCategoryFilter = (e) => {
     const { value } = e.target;
     setFilterStatus(value);
+    SetActivePage(1);
+    setCurrentPage(1);
     if (value === "Inactive") {
       handleInactiveSubCategory();
     } else if (value === "Deleted") {
@@ -410,7 +409,7 @@ const SubCategory = () => {
   }
 
   const handleInactiveSubCategory = () => {
-    dispatch(fetchInactiveSubCategory({ activepage, recperpage })).then((res) => {
+    dispatch(fetchInactiveSubCategory({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -422,14 +421,11 @@ const SubCategory = () => {
   }
   
   const handleDeletedSubCategory = () => {
-    dispatch(fetchDeletedSubCategory({ activepage, recperpage })).then((res) => {
-      console.log(res)
+    dispatch(fetchDeletedSubCategory({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res)
       }
     }).catch(err => {
 
@@ -478,7 +474,7 @@ const SubCategory = () => {
 
       }
     }).catch(err => {
-      message.error(err.message);
+      errorMessage(res);
     })
   };
 
@@ -491,48 +487,90 @@ const SubCategory = () => {
   
   const filterOptionCategoryDropdown = (input, option) =>(option?.label ?? '').toLowerCase().includes(input.toLowerCase());
 
+  const downloadExcel = async () => {
+    try {
+      setLoading({...loading,excel:true});
+      const response = await utility.get('/category/export/excel/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-category.xlsx`);
+      setLoading({...loading,excel:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      setLoading({...loading,pdf:true});
+      const response = await utility.get('/category/export/pdf/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, 'sample.pdf');
+      setLoading({...loading,pdf:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
+  const downloadCSV = async () => {
+    try {
+      setLoading({...loading,csv:true});
+      const response = await utility.get('/category/export/csv/category', {
+        responseType: 'blob', 
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      FileSaver.saveAs(blob,'category-data.csv');
+      setLoading({...loading,csv:false});
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
+
   return (
     <>
-      <div className='container'>
+      <div className='container-fluid'>
         <div className='row'>
           <div className="col-md-12">
-            <div className='d-flex justify-content-between  mb-2'>
+          <div className='d-flex justify-content-between  mb-2'>
+            <div className='d-flex justify-content-start'>
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
-                options={[{
-                  value:5,
-                  label:5
-                },
-                {
-                  value:10,
-                  label:10
-                },
-                {
-                  value:20,
-                  label:20
-                },
-                {
-                  value:30,
-                  label:30
-                },
-                {
-                  value:40,
-                  label:40
-                },
-                {
-                  value:50,
-                  label:50
-                }
-              
-              ]}
+                options={[
+                  {
+                    value: '5',
+                    label: '5',
+                  },
+                  {
+                    value: '10',
+                    label: '10',
+                  },
+                  {
+                    value: '20',
+                    label: '20',
+                  },
+                  {
+                    value: '50',
+                    label: '50',
+                  }
+                ]}
               />
-
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Excel</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>PDF</Button>
+              <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
+              </div>
+<div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleSubCategoryFilter}>
-                <Radio value={'All'}>All</Radio>
-                <Radio value={'Inactive'}>Inactive</Radio>
-                <Radio value={'Deleted'}>Deleted</Radio>
+                <Radio value={'All'}>All {filterStatus==="All"?<Badge count={subcategories?.data?.totalRecords??0} color='green'/>:''}</Radio>
+                <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={subcategories?.data?.totalRecords??0} color='yellow'/>:''}</Radio>
+                <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={subcategories?.data?.totalRecords??0} color='red'/>:''}</Radio>
               </Radio.Group>
+              <div className='search-field ms-3 me-3'>
+                <InputSearchField  setInputSearch={setInputSearch} loadingStatus={subcategories.isLoading}/>
+              </div>
               <Button
                 type="primary"
                 size={'small'}
@@ -540,6 +578,7 @@ const SubCategory = () => {
                 onClick={() => showDrawer()}
               />
             </div>
+          </div> 
             <div className=''>
               <Drawer
                 placement={'right'}
@@ -734,10 +773,11 @@ const SubCategory = () => {
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={59}
+               total={subcategories?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={recperpage}
+              current={currentPage}
               onChange={(page, pageSize) => {
                 paginationHandler(page, pageSize);
               }}

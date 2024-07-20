@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../constants";
-
+import {message} from 'antd';
 /* eslint-disable prettier/prettier */
 export function compareJSONObject(object1, object2, element, jsonObject) {
     /**
@@ -67,7 +67,6 @@ export function apiWithParams(params,endPoint){
             url.searchParams.append(key, params[key]);
         }
     });
-    console.log(url.toString(),' inactive category')
     return url.toString();
 }
 

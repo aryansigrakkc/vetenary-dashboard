@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import utility from "../../services/utility";
+import { apiWithParams } from "../../utils";
 
 const createSubCategory = createAsyncThunk(
   "subcategory/create",
@@ -15,8 +16,9 @@ const createSubCategory = createAsyncThunk(
 
 const fetchSubCategory = createAsyncThunk(
   "subcategory/all",
-  async () => {
-    const response = await utility.get(`subcategory/all/subcategory`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`subcategory/all/subcategory`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
@@ -31,16 +33,18 @@ const fetchAllSubCategory = createAsyncThunk(
 
 const fetchInactiveSubCategory = createAsyncThunk(
   "subcategory/inactive",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`subcategory/get-all-inactive/subcategory?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`subcategory/get-all-inactive/subcategory`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 
 const fetchDeletedSubCategory = createAsyncThunk(
   "subcategory/deleted",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`subcategory/get-all-deleted/subcategory?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`subcategory/get-all-deleted/subcategory`);
+    const response = await utility.get(url);
     return response.data;
   }
 );

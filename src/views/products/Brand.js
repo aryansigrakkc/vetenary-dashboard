@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
+import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined,FileExcelOutlined,FilePdfOutlined,FileOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBrand, createBrand, changeBrandStatus, fetchDeletedBrand, fetchInactiveBrand, restoreBrand, deleteBrand,changeBrandImage, updateBrand } from '../../redux/thunks/brandThunk'
 import dayjs from 'dayjs'
+import { errorMessage } from '../../utils';
+import utility from '../../services/utility';
+import FileSaver from 'file-saver';
+import InputSearchField from '../../components/search/InputSearchField';
 const Brand = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
+  const [currentPage,setCurrentPage] = useState(1);
+  const [inputSearch,setInputSearch] = useState("");
+  const [loading,setLoading] = useState({excel:false,pdf:false,csv:false});
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -29,7 +36,7 @@ const Brand = () => {
     }else{
       handleDeletedBrand();
     }
-  }, [activepage, recperpage]);
+  }, [activepage, recperpage,inputSearch]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
   };
@@ -110,7 +117,7 @@ const Brand = () => {
   };
 
   const fetchAllBrand = () => {
-    dispatch(fetchBrand({ activepage, recperpage })).then((res) => {
+    dispatch(fetchBrand({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -362,7 +369,7 @@ const Brand = () => {
 
   }
 const handleInactiveBrand = ()=>{
-  dispatch(fetchInactiveBrand({ activepage, recperpage })).then((res) => {
+  dispatch(fetchInactiveBrand({ activepage, recperpage,inputSearch })).then((res) => {
     if (res.payload.success) {
       // message.success(res.payload.message)
     } else {
@@ -374,14 +381,11 @@ const handleInactiveBrand = ()=>{
 }
 
 const handleDeletedBrand = ()=>{
-  dispatch(fetchDeletedBrand({ activepage, recperpage })).then((res) => {
-    console.log(res)
+  dispatch(fetchDeletedBrand({ activepage, recperpage,inputSearch})).then((res) => {
     if (res.payload.success) {
       // message.success(res.payload.message)
     } else {
-      res.payload?.errors ? res.payload.errors.forEach((err) => {
-        message.error(err);
-      }) : message.error(res.payload.message);
+      errorMessage(res);
     }
   }).catch(err => {
     
@@ -435,6 +439,47 @@ const handleDeletedBrand = ()=>{
     })
   };
   
+  const downloadExcel = async () => {
+    try {
+      setLoading({...loading,excel:true});
+      const response = await utility.get('/category/export/excel/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-category.xlsx`);
+      setLoading({...loading,excel:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      setLoading({...loading,pdf:true});
+      const response = await utility.get('/category/export/pdf/category', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, 'sample.pdf');
+      setLoading({...loading,pdf:false});
+    } catch (error) {
+      console.error('Error downloading the file', error);
+    }
+  };
+  const downloadCSV = async () => {
+    try {
+      setLoading({...loading,csv:true});
+      const response = await utility.get('/category/export/csv/category', {
+        responseType: 'blob', 
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      FileSaver.saveAs(blob,'category-data.csv');
+      setLoading({...loading,csv:false});
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
 
   return (
     <>
@@ -442,6 +487,7 @@ const handleDeletedBrand = ()=>{
         <div className='row'>
           <div className="col-md-12">
             <div className='d-flex justify-content-between  mb-2'>
+            <div className='d-flex justify-content-start'>
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
@@ -464,18 +510,28 @@ const handleDeletedBrand = ()=>{
                   }
                 ]}
               />
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Excel</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>PDF</Button>
+              <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
+              </div>
+              <div className='d-flex align-items-center'>
 
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleBrandFilter}>
                 <Radio value={'All'}>All</Radio>
                 <Radio value={'Inactive'}>Inactive</Radio>
                 <Radio value={'Deleted'}>Deleted</Radio>
               </Radio.Group>
+              <div className='search-field ms-3 me-3'>
+                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={brand.isLoading}/>
+                            </div>
+
               <Button
                 type="primary"
                 size={'small'}
                 icon={<PlusOutlined />}
                 onClick={() => showDrawer()}
               />
+               </div>
             </div>
             <div className=''>
               <Drawer
@@ -626,10 +682,11 @@ const handleDeletedBrand = ()=>{
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={59}
+              total={brand?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={brand.totalRecords}
+              current={currentPage}
               onChange={(page, pageSize) => {
                 paginationHandler(page, pageSize);
               }}

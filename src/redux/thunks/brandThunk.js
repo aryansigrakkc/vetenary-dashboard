@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import utility from "../../services/utility";
+import { apiWithParams } from "../../utils";
 
 const createBrand = createAsyncThunk(
   "brand/create",
@@ -15,8 +16,10 @@ const createBrand = createAsyncThunk(
 
 const fetchBrand = createAsyncThunk(
   "brand/all",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`brand/all/brand?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`brand/all/brand`);
+
+    const response = await utility.get(url);
     return response.data;
   }
 );
@@ -30,16 +33,18 @@ const fetchAllBrand = createAsyncThunk(
 
 const fetchInactiveBrand = createAsyncThunk(
   "brand/inactive",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`brand/get-all-inactive/brand?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`brand/get-all-inactive/brand`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 
 const fetchDeletedBrand = createAsyncThunk(
   "brand/deleted",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`brand/get-all-deleted/brand?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`brand/get-all-deleted/brand`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
