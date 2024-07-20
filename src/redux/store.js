@@ -6,6 +6,7 @@ import brandSlice from "./slice/brandSlice";
 import subCategorySlice from "./slice/subCategorySlice";
 import bannerSlice from "./slice/bannerSlice";
 import productSlice from "./slice/productSlice";
+import offerSlice from "./slice/offerSlice";
 
 const store = configureStore({
     reducer:{
@@ -15,7 +16,8 @@ const store = configureStore({
       subcategory:subCategorySlice,
       brand:brandSlice,
       banner:bannerSlice,
-      product:productSlice
+      product:productSlice,
+      offer:offerSlice,
 
     }
   });
