@@ -17,7 +17,7 @@ const createProduct = createAsyncThunk(
 const fetchProduct = createAsyncThunk(
   "product/all",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`product/all/product`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`product/all/product`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -41,7 +41,7 @@ const productDetails = createAsyncThunk(
 const fetchInactiveProduct = createAsyncThunk(
   "product/inactive",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`product/get-all-inactive/product`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`product/get-all-inactive/product`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -50,7 +50,7 @@ const fetchInactiveProduct = createAsyncThunk(
 const fetchDeletedProduct = createAsyncThunk(
   "product/deleted",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`product/get-all-deleted/product`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`product/get-all-deleted/product`);
     const response = await utility.get(url);
     return response.data;
   }

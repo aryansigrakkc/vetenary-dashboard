@@ -17,7 +17,7 @@ const createBanner = createAsyncThunk(
 const fetchBanner = createAsyncThunk(
   "banner/all",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/all/banner`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`banner/all/banner`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -27,7 +27,7 @@ const fetchBanner = createAsyncThunk(
 const fetchInactiveBanner = createAsyncThunk(
   "banner/inactive",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/get-all-inactive/banner`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`banner/get-all-inactive/banner`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -36,7 +36,7 @@ const fetchInactiveBanner = createAsyncThunk(
 const fetchDeletedBanner = createAsyncThunk(
   "banner/deleted",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/get-all-deleted/banner`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`banner/get-all-deleted/banner`);
     const response = await utility.get(url);
     return response.data;
   }

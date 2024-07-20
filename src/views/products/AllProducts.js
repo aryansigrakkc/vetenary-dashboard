@@ -61,7 +61,7 @@ const AllProducts = () => {
   const [form] = Form.useForm()
   const dispatch = useDispatch()
   const categories = useSelector((state) => state.category)
-  const products = useSelector((state) => state.product.data)
+  const products = useSelector((state) => state.product)
   const [filterStatus, setFilterStatus] = useState('All')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isActiveModalOpen, setIsActiveModalOpen] = useState(false)
@@ -75,6 +75,7 @@ const AllProducts = () => {
       handleDeletedProduct()
     }
   }, [activepage, recperpage,inputSearch])
+  
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra)
   }
@@ -389,7 +390,7 @@ const AllProducts = () => {
     },
   ]
   const arr = []
-  products?.data?.forEach((item, idx) => {
+  products?.data?.data?.forEach((item, idx) => {
     arr.push({
       _id: item._id,
       sno: idx + sno + 1,
@@ -575,19 +576,18 @@ const AllProducts = () => {
               <div className='d-flex align-items-center'>
 
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleProductFilter}>
-                <Radio value={'All'}>All</Radio>
-                <Radio value={'Inactive'}>Inactive</Radio>
-                <Radio value={'Deleted'}>Deleted</Radio>
+                <Radio value={'All'}>All {filterStatus==="All"?<Badge count={products?.data?.totalRecords??0} color='green'/>:''}</Radio>
+                <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={products?.data?.totalRecords??0} color='yellow'/>:''}</Radio>
+                <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={products?.data?.totalRecords??0} color='red'/>:''}</Radio>
               </Radio.Group>
               <div className='search-field ms-3 me-3'>
-                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={categories.isLoading}/>
+                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={products.isLoading}/>
                   </div>
               <Button
                 type="primary"
                 size={'small'}
                 icon={<PlusOutlined />}
-                onClick={() => showDrawer()}
-              />
+                onClick={() => <Navigate to={'/add/product'}/>}              />
               </div>
             </div>
             <div className="">

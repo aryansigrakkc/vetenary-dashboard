@@ -76,9 +76,7 @@ const Banner = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
 
       }
     }).catch(err => {
@@ -103,15 +101,13 @@ const Banner = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
         fetchAllBanner();
       }
     }).catch(err => {
       fetchAllBanner();
-      message.error(err.message);
-    })
+      errorMessage(res);
+        })
   };
 
   const onUpdateFinishFailed = (errorInfo) => {
@@ -123,8 +119,7 @@ const Banner = () => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        message.error(res.payload.message)
-      }
+        errorMessage(res);      }
     });
   }
 
@@ -190,14 +185,7 @@ const Banner = () => {
         message.success(res.payload.message);
         fetchAllBanner();
       } else {
-        if (res.payload.errors) {
-          res.payload.errors.forEach((err) => {
-            message.error(err.msg);
-          })
-          fetchAllBanner();
-        } else {
-          message.error(res.payload.message);
-        }
+        errorMessage(res);
 
       }
     }).catch((err) => {
@@ -219,7 +207,7 @@ const Banner = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
         }
       })
 
@@ -231,7 +219,7 @@ const Banner = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
         }
       });
     }
@@ -243,7 +231,7 @@ const Banner = () => {
           setType("");
         } else {
           setType("");
-          message.error(res.payload.message)
+          errorMessage(res);
           fetchAllBanner();
         }
       });
@@ -375,25 +363,21 @@ const Banner = () => {
   }
 
   const handleInactiveBanner = ()=>{
-    dispatch(fetchInactiveBanner({ activepage, recperpage })).then((res) => {
+    dispatch(fetchInactiveBanner({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
       }
     });
   }
   const handleDeletedBanner = ()=>{
-    dispatch(fetchDeletedBanner({ activepage, recperpage })).then((res) => {
+    dispatch(fetchDeletedBanner({ activepage, recperpage,inputSearch })).then((res) => {
       console.log(res)
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
       }
     }).catch(err => {
       
@@ -435,9 +419,7 @@ const Banner = () => {
         setFileList([]);
         form.resetFields();
       } else {
-        res.payload?.errors ? res.payload.errors.forEach((err) => {
-          message.error(err);
-        }) : message.error(res.payload.message);
+        errorMessage(res);
 
       }
     }).catch(err => {
@@ -492,7 +474,7 @@ const Banner = () => {
 
   return (
     <>
-      <div className='container'>
+      <div className='container-fluid'>
         <div className='row'>
           <div className="col-md-12">
             <div className='d-flex justify-content-between  mb-2'>
@@ -525,9 +507,9 @@ const Banner = () => {
               </div>
               <div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleBannerFilter}>
-                <Radio value={'All'}>All</Radio>
-                <Radio value={'Inactive'}>Inactive</Radio>
-                <Radio value={'Deleted'}>Deleted</Radio>
+                <Radio value={'All'}>All {filterStatus==="All"?<Badge count={banner?.data?.totalRecords??0} color='green'/>:''}</Radio>
+                <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={banner?.data?.totalRecords??0} color='yellow'/>:''}</Radio>
+                <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={banner?.data?.totalRecords??0} color='red'/>:''}</Radio>
               </Radio.Group>
               <div className='search-field ms-3 me-3'>
                             <InputSearchField  setInputSearch={setInputSearch} loadingStatus={banner.isLoading}/>

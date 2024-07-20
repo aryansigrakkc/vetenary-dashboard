@@ -18,7 +18,7 @@ const createCategory = createAsyncThunk(
 const fetchCategory = createAsyncThunk(
   "category/all",
   async ({activepage,recperpage,inputSearch}) => {
-  const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/all/category`);
+  const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`category/all/category`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -35,7 +35,7 @@ const fetchAllCategory = createAsyncThunk(
 const fetchInactiveCategory = createAsyncThunk(
   "category/inactive",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/get-all-inactive/category`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`category/get-all-inactive/category`);
     const response = await utility.get(url);
     return response.data;
   }
@@ -44,7 +44,7 @@ const fetchInactiveCategory = createAsyncThunk(
 const fetchDeletedCategory = createAsyncThunk(
   "category/deleted",
   async ({activepage,recperpage,inputSearch}) => {
-    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`category/get-all-deleted/category`);
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch.trim()},`category/get-all-deleted/category`);
     const response = await utility.get(url);
     return response.data;
   }
