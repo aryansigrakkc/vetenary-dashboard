@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import utility from "../../services/utility";
+import { apiWithParams } from "../../utils";
 
 const createBanner = createAsyncThunk(
   "banner/create",
@@ -15,8 +16,9 @@ const createBanner = createAsyncThunk(
 
 const fetchBanner = createAsyncThunk(
   "banner/all",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`banner/all/banner?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/all/banner`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
@@ -24,16 +26,18 @@ const fetchBanner = createAsyncThunk(
 
 const fetchInactiveBanner = createAsyncThunk(
   "banner/inactive",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`banner/get-all-inactive/banner?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/get-all-inactive/banner`);
+    const response = await utility.get(url);
     return response.data;
   }
 );
 
 const fetchDeletedBanner = createAsyncThunk(
   "banner/deleted",
-  async ({activepage,recperpage}) => {
-    const response = await utility.get(`banner/get-all-deleted/banner?limit=${recperpage}&page=${activepage}`);
+  async ({activepage,recperpage,inputSearch}) => {
+    const url = apiWithParams({"page":activepage,"limit":recperpage,name:inputSearch},`banner/get-all-deleted/banner`);
+    const response = await utility.get(url);
     return response.data;
   }
 );

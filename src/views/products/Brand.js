@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal } from 'antd';
+import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal,Badge } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined,FileExcelOutlined,FilePdfOutlined,FileOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -442,13 +442,14 @@ const handleDeletedBrand = ()=>{
   const downloadExcel = async () => {
     try {
       setLoading({...loading,excel:true});
-      const response = await utility.get('/category/export/excel/category', {
+      const response = await utility.get('/brand/export/excel/brand', {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: response.headers['content-type'] });
-      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-category.xlsx`);
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-brand.xlsx`);
       setLoading({...loading,excel:false});
     } catch (error) {
+      setLoading({...loading,excel:false});
       console.error('Error downloading the file', error);
     }
   };
@@ -456,26 +457,29 @@ const handleDeletedBrand = ()=>{
   const downloadPDF = async () => {
     try {
       setLoading({...loading,pdf:true});
-      const response = await utility.get('/category/export/pdf/category', {
+      const response = await utility.get('/brand/export/pdf/brand', {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: response.headers['content-type'] });
       FileSaver.saveAs(blob, 'sample.pdf');
       setLoading({...loading,pdf:false});
     } catch (error) {
+      setLoading({...loading,pdf:false});
       console.error('Error downloading the file', error);
     }
   };
   const downloadCSV = async () => {
     try {
       setLoading({...loading,csv:true});
-      const response = await utility.get('/category/export/csv/category', {
+      const response = await utility.get('/brand/export/csv/brand', {
         responseType: 'blob', 
       });
       const blob = new Blob([response.data], { type: 'text/csv' });
-      FileSaver.saveAs(blob,'category-data.csv');
+      FileSaver.saveAs(blob,'brand-data.csv');
       setLoading({...loading,csv:false});
     } catch (error) {
+      setLoading({...loading,csv:false});
+
       console.error('Error downloading CSV:', error);
     }
   };
@@ -517,9 +521,9 @@ const handleDeletedBrand = ()=>{
               <div className='d-flex align-items-center'>
 
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleBrandFilter}>
-                <Radio value={'All'}>All</Radio>
-                <Radio value={'Inactive'}>Inactive</Radio>
-                <Radio value={'Deleted'}>Deleted</Radio>
+                <Radio value={'All'}>All {filterStatus==="All"?<Badge count={brand?.data?.totalRecords??0} color='green'/>:''}</Radio>
+                <Radio value={'Inactive'}>Inactive {filterStatus==="Inactive"? <Badge count={brand?.data?.totalRecords??0} color='yellow'/>:''}</Radio>
+                <Radio value={'Deleted'}>Deleted {filterStatus==="Deleted" ? <Badge count={brand?.data?.totalRecords??0} color='red'/>:''}</Radio>
               </Radio.Group>
               <div className='search-field ms-3 me-3'>
                             <InputSearchField  setInputSearch={setInputSearch} loadingStatus={brand.isLoading}/>

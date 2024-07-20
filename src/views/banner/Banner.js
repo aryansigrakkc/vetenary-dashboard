@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal } from 'antd';
+import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, Table, Radio, Pagination, Select, Switch, Modal,Badge } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined } from '@ant-design/icons';
+import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined,FileExcelOutlined,FilePdfOutlined,FileOutlined} from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBanner, createBanner, changeBannerStatus, fetchDeletedBanner, fetchInactiveBanner, restoreBanner, deleteBanner,changeBannerImage, updateBanner } from '../../redux/thunks/bannerThunk'
 import dayjs from 'dayjs'
+import { errorMessage } from '../../utils';
+import utility from '../../services/utility';
+import FileSaver from 'file-saver';
+import InputSearchField from '../../components/search/InputSearchField';
+
 const Banner = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
+  const [currentPage,setCurrentPage] = useState(1);
+  const [inputSearch,setInputSearch] = useState("");
+  const [loading,setLoading] = useState({excel:false,pdf:false,csv:false});
   const sno = recperpage * (activepage - 1);
   const [open, setOpen] = useState(false);
 
@@ -29,7 +37,7 @@ const Banner = () => {
     }else{
       handleDeletedBanner();
     }
-  }, [activepage, recperpage]);
+  }, [activepage, recperpage,inputSearch]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
   };
@@ -111,7 +119,7 @@ const Banner = () => {
   };
 
   const fetchAllBanner = () => {
-    dispatch(fetchBanner({ activepage, recperpage })).then((res) => {
+    dispatch(fetchBanner({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -207,7 +215,7 @@ const Banner = () => {
       dispatch(changeBannerStatus(obj)).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchInactiveBanner({ activepage, recperpage }))
+          dispatch(fetchInactiveBanner({ activepage, recperpage,inputSearch }))
           setType("");
         } else {
           setType("");
@@ -219,7 +227,7 @@ const Banner = () => {
       dispatch(restoreBanner({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedBanner({ activepage, recperpage }));
+          dispatch(fetchDeletedBanner({ activepage, recperpage,inputSearch }));
           setType("");
         } else {
           setType("");
@@ -438,12 +446,57 @@ const Banner = () => {
   };
   
 
+  const downloadExcel = async () => {
+    try {
+      setLoading({...loading,excel:true});
+      const response = await utility.get('/banner/export/excel/banner', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-banner.xlsx`);
+      setLoading({...loading,excel:false});
+    } catch (error) {
+      setLoading({...loading,excel:false});
+      console.error('Error downloading the file', error);
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      setLoading({...loading,pdf:true});
+      const response = await utility.get('/banner/export/pdf/banner', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, 'sample.pdf');
+      setLoading({...loading,pdf:false});
+    } catch (error) {
+      setLoading({...loading,pdf:false});
+      console.error('Error downloading the file', error);
+    }
+  };
+  const downloadCSV = async () => {
+    try {
+      setLoading({...loading,csv:true});
+      const response = await utility.get('/banner/export/csv/banner', {
+        responseType: 'blob', 
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      FileSaver.saveAs(blob,'banner-data.csv');
+      setLoading({...loading,csv:false});
+    } catch (error) {
+      setLoading({...loading,csv:false});
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
   return (
     <>
       <div className='container'>
         <div className='row'>
           <div className="col-md-12">
             <div className='d-flex justify-content-between  mb-2'>
+            <div className='d-flex justify-content-start'>
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
@@ -466,18 +519,26 @@ const Banner = () => {
                   }
                 ]}
               />
-
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Excel</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>PDF</Button>
+              <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
+              </div>
+              <div className='d-flex align-items-center'>
               <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleBannerFilter}>
                 <Radio value={'All'}>All</Radio>
                 <Radio value={'Inactive'}>Inactive</Radio>
                 <Radio value={'Deleted'}>Deleted</Radio>
               </Radio.Group>
+              <div className='search-field ms-3 me-3'>
+                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={banner.isLoading}/>
+              </div>
               <Button
                 type="primary"
                 size={'small'}
                 icon={<PlusOutlined />}
                 onClick={() => showDrawer()}
               />
+                </div>            
             </div>
             <div className=''>
               <Drawer
@@ -647,7 +708,7 @@ const Banner = () => {
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={59}
+              total={banner?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={recperpage}

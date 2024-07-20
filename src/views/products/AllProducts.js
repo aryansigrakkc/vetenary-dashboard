@@ -16,6 +16,7 @@ import {
   Select,
   Switch,
   Modal,
+  Badge
 } from 'antd'
 import ImgCrop from 'antd-img-crop'
 import {
@@ -24,28 +25,34 @@ import {
   MenuFoldOutlined,
   DeleteOutlined,
   EyeOutlined,
-  SignatureOutlined,
+  SignatureOutlined
+  ,FileExcelOutlined,FilePdfOutlined,FileOutlined
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  fetchCategory,
-  createCategory,
-  changeCategoryStatus,
-  fetchDeletedCategory,
-  fetchInactiveCategory,
-  restoreCategory,
-  deleteCategory,
-  changeCategoryImage,
-  updateCategory,
-} from '../../redux/thunks/categoryThunk'
+  fetchProduct,
+  createProduct,
+  changeProductStatus,
+  fetchDeletedProduct,
+  fetchInactiveProduct,
+  restoreProduct,
+  deleteProduct,
+} from '../../redux/thunks/productThunk'
 
-import { fetchProduct } from '../../redux/thunks/productThunk'
+import { fetchCategory,createCategory } from '../../redux/thunks/categoryThunk'
 import dayjs from 'dayjs'
+import { errorMessage } from '../../utils';
+import utility from '../../services/utility';
+import FileSaver from 'file-saver';
+
 import { Link } from 'react-router-dom'
+import InputSearchField from '../../components/search/InputSearchField'
 const AllProducts = () => {
   const [recperpage, SetRecPerPage] = useState(5)
   const [activepage, SetActivePage] = useState(1)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage,setCurrentPage] = useState(1);
+  const [inputSearch,setInputSearch] = useState("");
+  const [loading,setLoading] = useState({excel:false,pdf:false,csv:false});
   const sno = recperpage * (activepage - 1)
   const [open, setOpen] = useState(false)
 
@@ -59,16 +66,15 @@ const AllProducts = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isActiveModalOpen, setIsActiveModalOpen] = useState(false)
   const [mainObjectId, setMainObjectId] = useState('')
-
   useEffect(() => {
     if (filterStatus === 'All') {
-      fetchAllCategory()
+      fetchAllProduct()
     } else if (filterStatus === 'Inactive') {
-      handleInactiveCategory()
+      handleInactiveProduct()
     } else {
-      handleDeletedCategory()
+      handleDeletedProduct()
     }
-  }, [activepage, recperpage])
+  }, [activepage, recperpage,inputSearch])
   const onChangeTable = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra)
   }
@@ -101,7 +107,7 @@ const AllProducts = () => {
       .then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
           setOpen(false)
           setFileList([])
           form.resetFields()
@@ -131,7 +137,7 @@ const AllProducts = () => {
       .then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
           setOpen(false)
           setFileList([])
           form.resetFields()
@@ -141,11 +147,11 @@ const AllProducts = () => {
                 message.error(err)
               })
             : message.error(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
         }
       })
       .catch((err) => {
-        fetchAllCategory()
+        fetchAllProduct()
         message.error(err.message)
       })
   }
@@ -154,8 +160,8 @@ const AllProducts = () => {
     message.error('Submit failed!', errorInfo)
   }
 
-  const fetchAllCategory = () => {
-    dispatch(fetchProduct({ activepage, recperpage })).then((res) => {
+  const fetchAllProduct = () => {
+    dispatch(fetchProduct({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -184,13 +190,13 @@ const AllProducts = () => {
   }
   const handleOk = () => {
     if (type === 'restore' && actionType === 'restore') {
-      hanleRestoreCategory()
+      hanleRestoreProduct()
       setIsModalOpen(false)
     } else if (type === 'active' && actionType === 'reactive') {
-      hanleRestoreCategory()
+      hanleRestoreProduct()
       setIsModalOpen(false)
     } else if (type === 'delete' && actionType === 'delete') {
-      hanleRestoreCategory()
+      hanleRestoreProduct()
       setIsModalOpen(false)
     } else if (type === '') {
       message.error('Please enter value')
@@ -211,23 +217,23 @@ const AllProducts = () => {
     setCurrentPage(page)
   }
 
-  const handleCategoryStatus = (id, status) => {
+  const handleProductStatus = (id, status) => {
     status = status === 0 ? 1 : 0
     let obj = {
       _id: id,
       status: status,
     }
-    dispatch(changeCategoryStatus(obj))
+    dispatch(changeProductStatus(obj))
       .then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
         } else {
           if (res.payload.errors) {
             res.payload.errors.forEach((err) => {
               message.error(err.msg)
             })
-            fetchAllCategory()
+            fetchAllProduct()
           } else {
             message.error(res.payload.message)
           }
@@ -238,16 +244,16 @@ const AllProducts = () => {
       })
   }
 
-  const hanleRestoreCategory = () => {
+  const hanleRestoreProduct = () => {
     if (filterStatus === 'Inactive') {
       const obj = {
         _id: mainObjectId,
         status: 1,
       }
-      dispatch(changeCategoryStatus(obj)).then((res) => {
+      dispatch(changeProductStatus(obj)).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchInactiveCategory({ activepage, recperpage }))
+          dispatch(fetchInactiveCategory({ activepage, recperpage,inputSearch }))
           setType('')
         } else {
           setType('')
@@ -255,10 +261,10 @@ const AllProducts = () => {
         }
       })
     } else if (filterStatus === 'Deleted') {
-      dispatch(restoreCategory({ activepage, recperpage, mainObjectId })).then((res) => {
+      dispatch(restoreProduct({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedCategory({ activepage, recperpage }))
+          dispatch(fetchDeletedProduct({ activepage, recperpage,inputSearch }))
           setType('')
         } else {
           setType('')
@@ -266,19 +272,19 @@ const AllProducts = () => {
         }
       })
     } else if (actionType === 'delete') {
-      dispatch(deleteCategory({ mainObjectId })).then((res) => {
+      dispatch(deleteProduct({ mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
           setType('')
         } else {
           setType('')
           message.error(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
         }
       })
     } else {
-      fetchAllCategory()
+      fetchAllProduct()
     }
   }
 
@@ -317,7 +323,7 @@ const AllProducts = () => {
               <>
                 <Switch
                   checked={value.status}
-                  onChange={() => handleCategoryStatus(value._id, value.status)}
+                  onChange={() => handleProductStatus(value._id, value.status)}
                   checkedChildren="Active"
                   unCheckedChildren="Inactive"
                 />
@@ -399,22 +405,22 @@ const AllProducts = () => {
   const handlePerPageRecord = (value) => {
     SetRecPerPage(value)
   }
-  const handleCategoryFilter = (e) => {
+  const handleProductFilter = (e) => {
     const { value } = e.target
     setFilterStatus(value)
     SetActivePage(1)
     setCurrentPage(1)
     if (value === 'Inactive') {
-      handleInactiveCategory()
+      handleInactiveProduct()
     } else if (value === 'Deleted') {
-      handleDeletedCategory()
+      handleDeletedProduct()
     } else {
-      fetchAllCategory()
+      fetchAllProduct()
     }
   }
 
-  const handleInactiveCategory = () => {
-    dispatch(fetchInactiveCategory({ activepage, recperpage })).then((res) => {
+  const handleInactiveProduct = () => {
+    dispatch(fetchInactiveProduct({ activepage, recperpage,inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -426,8 +432,8 @@ const AllProducts = () => {
       }
     })
   }
-  const handleDeletedCategory = () => {
-    dispatch(fetchDeletedCategory({ activepage, recperpage }))
+  const handleDeletedProduct = () => {
+    dispatch(fetchDeletedProduct({ activepage, recperpage,inputSearch }))
       .then((res) => {
         console.log(res)
         if (res.payload.success) {
@@ -455,7 +461,7 @@ const AllProducts = () => {
     setViewCategoryData(mainObj)
   }
 
-  const handleCategoryUpdate = (_id) => {
+  const handleProductUpdate = (_id) => {
     const item = arr.find((item) => item._id === _id)
     showDrawer(true)
     setActionType('update')
@@ -473,7 +479,7 @@ const AllProducts = () => {
       .then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllCategory()
+          fetchAllProduct()
           setOpen(false)
           showDrawer(false)
           setFileList([])
@@ -490,13 +496,56 @@ const AllProducts = () => {
         message.error(err.message)
       })
   }
+  const downloadExcel = async () => {
+    try {
+      setLoading({...loading,excel:true});
+      const response = await utility.get('/product/export/excel/product', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-product.xlsx`);
+      setLoading({...loading,excel:false});
+    } catch (error) {
+      setLoading({...loading,excel:false});
+      console.error('Error downloading the file', error);
+    }
+  };
 
+  const downloadPDF = async () => {
+    try {
+      setLoading({...loading,pdf:true});
+      const response = await utility.get('/product/export/pdf/product', {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      FileSaver.saveAs(blob, 'sample.pdf');
+      setLoading({...loading,pdf:false});
+    } catch (error) {
+      setLoading({...loading,pdf:false});
+      console.error('Error downloading the file', error);
+    }
+  };
+  const downloadCSV = async () => {
+    try {
+      setLoading({...loading,csv:true});
+      const response = await utility.get('/product/export/csv/product', {
+        responseType: 'blob', 
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      FileSaver.saveAs(blob,'product-data.csv');
+      setLoading({...loading,csv:false});
+    } catch (error) {
+      setLoading({...loading,csv:false});
+      console.error('Error downloading CSV:', error);
+    }
+  };
   return (
     <>
-      <div className="container">
+      <div className="container-fluid">
         <div className="row">
           <div className="col-md-12">
             <div className="d-flex justify-content-between  mb-2">
+            <div className='d-flex justify-content-start'>
               <Select
                 defaultValue={recperpage}
                 onChange={handlePerPageRecord}
@@ -516,21 +565,30 @@ const AllProducts = () => {
                   {
                     value: '50',
                     label: '50',
-                  },
+                  }
                 ]}
               />
+              <Button type="dashed" loading={loading.excel} disabled={loading.excel} onClick={downloadExcel} className='ms-3' icon={<FileExcelOutlined />}>Excel</Button>
+              <Button type="dashed" loading={loading.pdf} disabled={loading.pdf} onClick={downloadPDF} className='ms-3' icon={<FilePdfOutlined />}>PDF</Button>
+              <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
+              </div>
+              <div className='d-flex align-items-center'>
 
-              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleCategoryFilter}>
+              <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleProductFilter}>
                 <Radio value={'All'}>All</Radio>
                 <Radio value={'Inactive'}>Inactive</Radio>
                 <Radio value={'Deleted'}>Deleted</Radio>
               </Radio.Group>
+              <div className='search-field ms-3 me-3'>
+                            <InputSearchField  setInputSearch={setInputSearch} loadingStatus={categories.isLoading}/>
+                  </div>
               <Button
                 type="primary"
                 size={'small'}
                 icon={<PlusOutlined />}
                 onClick={() => showDrawer()}
               />
+              </div>
             </div>
             <div className="">
               <Drawer placement={'right'} height={'auto'} width={500} onClose={onClose} open={open}>
@@ -667,12 +725,12 @@ const AllProducts = () => {
               dataSource={arr}
               onChange={onChangeTable}
               pagination={false}
-              loading={categories.isLoading}
+              loading={products.isLoading}
             />
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={categories?.data?.totalRecords}
+              total={products?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={recperpage}

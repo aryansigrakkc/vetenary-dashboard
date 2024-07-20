@@ -60,7 +60,6 @@ export function getNameAttributes(name) {
 }
 
 export function apiWithParams(params,endPoint){
-    console.log(params,' params')
     const url = new URL(API_BASE_URL+endPoint);
     Object.keys(params).forEach(key => {
         if (params[key] !== undefined) {

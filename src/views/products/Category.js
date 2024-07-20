@@ -450,6 +450,7 @@ const Category = () => {
       FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-category.xlsx`);
       setLoading({...loading,excel:false});
     } catch (error) {
+      setLoading({...loading,excel:false});
       console.error('Error downloading the file', error);
     }
   };
@@ -464,6 +465,7 @@ const Category = () => {
       FileSaver.saveAs(blob, 'sample.pdf');
       setLoading({...loading,pdf:false});
     } catch (error) {
+      setLoading({...loading,pdf:false});
       console.error('Error downloading the file', error);
     }
   };
@@ -477,6 +479,7 @@ const Category = () => {
       FileSaver.saveAs(blob,'category-data.csv');
       setLoading({...loading,csv:false});
     } catch (error) {
+      setLoading({...loading,csv:false});
       console.error('Error downloading CSV:', error);
     }
   };
