@@ -17,6 +17,7 @@ const Brand = React.lazy(() => import('./views/products/Brand'))
 const Banner = React.lazy(() => import('./views/banner/Banner'))
 const Offer = React.lazy(() => import('./views/offer/Offer'))
 const Order = React.lazy(() => import('./views/order/Order'))
+const Client = React.lazy(() => import('./views/client/Client'))
 
 // Base
 const Accordion = React.lazy(() => import('./views/base/accordion/Accordion'))
@@ -77,6 +78,7 @@ const routes = [
   { path: '/all/banner', name: 'Banner', element: Banner },
   { path: '/all/offer', name: 'Offer', element: Offer,exact:true },
   { path: '/all/order', name: 'Order', element: Order,exact:true },
+  { path: '/all/client', name: 'Client', element: Client,exact:true },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },

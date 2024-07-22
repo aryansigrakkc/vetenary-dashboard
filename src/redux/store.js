@@ -8,7 +8,7 @@ import bannerSlice from "./slice/bannerSlice";
 import productSlice from "./slice/productSlice";
 import offerSlice from "./slice/offerSlice";
 import orderSlice from "./slice/orderSlice";
-
+import clientSlice from "./slice/clientSlice";
 const store = configureStore({
     reducer:{
       header:headerSlice,
@@ -20,6 +20,7 @@ const store = configureStore({
       product:productSlice,
       offer:offerSlice,
       order:orderSlice,
+      client:clientSlice
 
     }
   });

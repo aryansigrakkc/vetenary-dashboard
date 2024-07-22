@@ -131,6 +131,19 @@ const _nav = [
       },
       ],
   },
+  {
+    component: CNavGroup,
+    name: 'Client',
+    to: '/all/client',
+    icon: <CIcon icon={cilClipboard} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'All Client List',
+        to: '/all/client',
+      },
+      ],
+  },
   // {
   //   component: CNavTitle,
   //   name: 'Theme',
