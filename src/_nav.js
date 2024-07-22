@@ -12,6 +12,7 @@ import {
   cilPuzzle,
   cilSpeedometer,
   cilStar,
+  cilBasket, cilTags, cilLayers, cilFactory, cilImage, cilGift, cilClipboard 
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -34,7 +35,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Products',
     to: '/all/products',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilBasket} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -52,7 +53,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Category',
     to: '/all/categories',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilTags} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -65,7 +66,7 @@ const _nav = [
     component: CNavGroup,
     name: 'SubCategory',
     to: '/all/subcategories',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilLayers} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -78,7 +79,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Brand',
     to: '/all/brand',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilFactory} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -95,7 +96,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Banners',
     to: '/all/banners',
-    icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilImage} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
@@ -108,12 +109,25 @@ const _nav = [
     component: CNavGroup,
     name: 'Offer',
     to: '/all/offer',
-    icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'All Offer List',
         to: '/all/offer',
+      },
+      ],
+  },
+  {
+    component: CNavGroup,
+    name: 'Order',
+    to: '/all/order',
+    icon: <CIcon icon={cilClipboard} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'All Order List',
+        to: '/all/order',
       },
       ],
   },

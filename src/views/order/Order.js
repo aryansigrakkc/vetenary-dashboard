@@ -3,14 +3,14 @@ import { Button, Form, Flex, Input, message, Drawer, Space, Card, Upload, Tag, T
 import ImgCrop from 'antd-img-crop';
 import { PlusOutlined, ScissorOutlined, MenuFoldOutlined, DeleteOutlined, EyeOutlined, SignatureOutlined, FileExcelOutlined, FilePdfOutlined, FileOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOffer, createOffer, changeOfferStatus, fetchDeletedOffer, fetchInactiveOffer, restoreOffer, deleteOffer, changeOfferImage, updateOffer } from '../../redux/thunks/offerThunk'
+import { fetchOrder, getOrderDetails,changeOrderStatus } from '../../redux/thunks/orderThunk'
 import dayjs from 'dayjs'
 import { errorMessage } from '../../utils';
 import utility from '../../services/utility';
 import FileSaver from 'file-saver';
 import InputSearchField from '../../components/search/InputSearchField';
-
-const Offer = () => {
+import "./order.scss";
+const Order = () => {
   const [recperpage, SetRecPerPage] = useState(5);
   const [activepage, SetActivePage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,19 +23,18 @@ const Offer = () => {
   const [actionType, setActionType] = useState("");
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const offer = useSelector(state => state.offer);
+  const order = useSelector(state => state.order);
   const [filterStatus, setFilterStatus] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isActiveModalOpen, setIsActiveModalOpen] = useState(false);
   const [mainObjectId, setMainObjectId] = useState("");
 
   useEffect(() => {
     if (filterStatus === "All") {
-      fetchAllOffer();
-    } else if (filterStatus === "Inactive") {
-      handleInactiveOffer();
+      fetchAllOrder();
+    } else if (filterStatus === "Pending") {
+      handlePendingOrder();
     } else {
-      handleDeletedOffer();
+      handleFailedOrder();
     }
   }, [activepage, recperpage, inputSearch]);
   const onChangeTable = (pagination, filters, sorter, extra) => {
@@ -43,7 +42,7 @@ const Offer = () => {
   };
 
   const [fileList, setFileList] = useState([]);
-  const [viewOfferData, setViewOfferData] = useState([]);
+  const [viewOrderData, setViewOrderData] = useState([]);
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
@@ -73,10 +72,10 @@ const Offer = () => {
       if(fromAmount>toAmount){
         message.error("Starting amount must be less than ending amount")
       }
-    dispatch(createOffer(formData)).then((res) => {
+    dispatch(createOrder(formData)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllOffer();
+        fetchAllOrder();
         setOpen(false);
         setFileList([]);
         form.resetFields();
@@ -98,19 +97,19 @@ const Offer = () => {
       _id: mainObjectId,
       name: values.name
     }
-    dispatch(updateOffer(obj)).then((res) => {
+    dispatch(updateOrder(obj)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllOffer();
+        fetchAllOrder();
         setOpen(false);
         setFileList([]);
         form.resetFields();
       } else {
         errorMessage(res);
-        fetchAllOffer();
+        fetchAllOrder();
       }
     }).catch(err => {
-      fetchAllOffer();
+      fetchAllOrder();
       errorMessage(res);
     })
   };
@@ -119,8 +118,8 @@ const Offer = () => {
     message.error('Submit failed!', errorInfo);
   };
 
-  const fetchAllOffer = () => {
-    dispatch(fetchOffer({ activepage, recperpage, inputSearch })).then((res) => {
+  const fetchAllOrder = () => {
+    dispatch(fetchOrder({ activepage, recperpage, inputSearch,status:"all" })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -144,20 +143,20 @@ const Offer = () => {
     setIsModalOpen(true);
     setActionType(actionType);
     if (actionType === 'view') {
-      showOfferData(_id);
+      showOrderData(_id);
     }
   };
   const handleOk = () => {
     if (type === "restore" && actionType === "restore") {
-      hanleRestoreOffer();
+      hanleRestoreOrder();
       setIsModalOpen(false);
     }
     else if (type === "active" && actionType === "reactive") {
-      hanleRestoreOffer();
+      hanleRestoreOrder();
       setIsModalOpen(false);
     }
     else if (type === "delete" && actionType === "delete") {
-      hanleRestoreOffer();
+      hanleRestoreOrder();
       setIsModalOpen(false);
     }
     else if (type === "") {
@@ -180,16 +179,16 @@ const Offer = () => {
     SetActivePage(page);
   }
 
-  const handleOfferStatus = (id, status) => {
+  const handleOrderStatus = (id, status) => {
     status = status === 0 ? 1 : 0;
     let obj = {
       _id: id,
       status: status
     }
-    dispatch(changeOfferStatus(obj)).then((res) => {
+    dispatch(changeOrderStatus(obj)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message);
-        fetchAllOffer();
+        fetchAllOrder();
       } else {
         errorMessage(res);
 
@@ -200,16 +199,16 @@ const Offer = () => {
 
   }
 
-  const hanleRestoreOffer = () => {
-    if (filterStatus === "Inactive") {
+  const hanleRestoreOrder = () => {
+    if (filterStatus === "Pending") {
       const obj = {
         _id: mainObjectId,
         status: 1
       }
-      dispatch(changeOfferStatus(obj)).then((res) => {
+      dispatch(changeOrderStatus(obj)).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchInactiveOffer({ activepage, recperpage, inputSearch }))
+          dispatch(fetchPendingOrder({ activepage, recperpage, inputSearch }))
           setType("");
         } else {
           setType("");
@@ -217,11 +216,11 @@ const Offer = () => {
         }
       })
 
-    } else if (filterStatus === "Deleted") {
-      dispatch(restoreOffer({ activepage, recperpage, mainObjectId })).then((res) => {
+    } else if (filterStatus === "Failed") {
+      dispatch(restoreOrder({ activepage, recperpage, mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          dispatch(fetchDeletedOffer({ activepage, recperpage, inputSearch }));
+          dispatch(fetchFailedOrder({ activepage, recperpage, inputSearch }));
           setType("");
         } else {
           setType("");
@@ -230,20 +229,20 @@ const Offer = () => {
       });
     }
     else if (actionType === "delete") {
-      dispatch(deleteOffer({ mainObjectId })).then((res) => {
+      dispatch(deleteOrder({ mainObjectId })).then((res) => {
         if (res.payload.success) {
           message.success(res.payload.message)
-          fetchAllOffer();
+          fetchAllOrder();
           setType("");
         } else {
           setType("");
           errorMessage(res);
-          fetchAllOffer();
+          fetchAllOrder();
         }
       });
     }
     else {
-      fetchAllOffer();
+      fetchAllOrder();
     }
   }
 
@@ -254,9 +253,9 @@ const Offer = () => {
       key: 'sno',
     },
     {
-      title: 'Image',
-      dataIndex: 'image',
-      key: 'image',
+      title: 'User Image',
+      dataIndex: 'u_image',
+      key: 'u_image',
       render: (_, value) => {
         return (<>
           <img src={value.image} width={50} height={50} />
@@ -264,58 +263,37 @@ const Offer = () => {
       }
     },
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name - b.name,
+      title: 'User Name',
+      dataIndex: 'u_name',
+      key: 'u_name',
+      sorter: (a, b) => a.u_name - b.u_name,
+    },
+    {
+      title: 'Contact',
+      dataIndex: 'u_contact',
+      key: 'u_contact',
+      sorter: (a, b) => a.u_contact - b.u_contact,
+    },
+    {
+      title: 'Total Amount',
+      dataIndex: 'total',
+      key: 'total',
+    },
+    
+    {
+      title: 'Payment Status',
+      dataIndex: 'paymentStatus',
+      key: 'paymentStatus',
+      sorter: (a, b) => a.paymentStatus.localeCompare(b.paymentStatus),
 
-    },
-    {
-      title: 'Starting Amount',
-      dataIndex: 'fromAmount',
-      key: 'fromAmount',
-    },
-    {
-      title: 'Ending Amount',
-      dataIndex: 'toAmount',
-      key: 'toAmount',
-    },
-    {
-      title: 'Percentage',
-      dataIndex: 'percentage',
-      key: 'percentage',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
       render: (_, value) => {
-        if (filterStatus === 'All') {
-          if (value.isDeleted === false) {
-            return (<>
-              <Switch
-                checked={value.status}
-                onChange={() => handleOfferStatus(value._id, value.status)}
-                checkedChildren="Active"
-                unCheckedChildren="Inactive"
-              />
-            </>)
-          } else {
-            return (<Tag color="red">Deleted</Tag>)
+          if (value.paymentStatus === 'pending') {
+            return (<Tag color="yellow">Pending</Tag>)
+          } else if(value.paymentStatus === 'done') {
+            return (<Tag color="green">Done</Tag>)
+          }else if(value.paymentStatus === 'failed') {
+            return (<Tag color="red">Failed</Tag>)
           }
-
-        } else if (filterStatus === "Inactive") {
-          if (value.status === 0)
-            return (<Tag color="red">Inactive</Tag>)
-          else
-            return (<Tag color="green">Active</Tag>)
-        } else {
-          if (value.isDeleted === false)
-            return (<Tag color="green">Not Deleted</Tag>)
-          else
-            return (<Tag color="red">Deleted</Tag>)
-        }
-
       }
     },
     {
@@ -332,34 +310,36 @@ const Offer = () => {
         if (filterStatus === "All") {
           return (<>
             <Flex wrap gap="small" className="site-button-ghost-wrapper">
-
-              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Offer'} />
-              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleOfferUpdate(value._id)} title={'Edit Offer'} />
-              <Button size={'small'} icon={<DeleteOutlined />} danger onClick={() => showModal(value._id, 'delete')} title={'Delete Offer'} />
+              <Button size={'small'} icon={<EyeOutlined />} onClick={() => showModal(value._id, 'view')} title={'View Order'} />
+              <Button size={'small'} icon={<SignatureOutlined />} onClick={() => handleOrderUpdate(value._id)} title={'Edit Order'} />
             </Flex>
           </>)
-        } else if (filterStatus === "Inactive") {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active Offer"} /></Button>)
+        } else if (filterStatus === "Pending") {
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'reactive')}><MenuFoldOutlined title={"Active Order"} /></Button>)
         } else {
-          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Deleted Offer"} /></Button>)
+          return (<Button size={'small'} onClick={() => showModal(value._id, 'restore')}><ScissorOutlined title={"Restore Failed Order"} /></Button>)
         }
       }
     },
 
   ];
+  
   const arr = [];
-  offer?.data?.data?.forEach((item, idx) => {
+  order?.data?.data?.forEach((item, idx) => {
     arr.push({
+      key:(idx + 1),
       _id: item._id,
       sno: (idx + sno + 1),
-      name: item.name,
-      fromAmount: `Rs.${item.fromAmount}`,
-      toAmount: `Rs.${item.toAmount}`,
-      percentage: <Badge count={`${item.percentage}%`} color='green' />,
+      u_image: `http://localhost:8080/${item.image}`,
+      u_name: item.user.fullName,
+      u_email: item.user.email,
+      u_contact: item.user.mobileNo,
+      orderId:item.orderId,
+      total: <Badge count={`Rs.${item.total}`} color={item.paymentStatus!=='done'?'red':'green'}/>,
+      paymentStatus: item.paymentStatus,
       image: `http://localhost:8080/${item.image}`,
       status: item.status,
       createdAt: (dayjs(item.timeStamps).format('DD/MM/YY')),
-      isDeleted: item.isDeleted,
       action: item
     })
   });
@@ -367,21 +347,21 @@ const Offer = () => {
   const handlePerPageRecord = (value) => {
     SetRecPerPage(value);
   }
-  const handleOfferFilter = (e) => {
+  const handleOrderFilter = (e) => {
     const { value } = e.target;
     setFilterStatus(value);
-    if (value === "Inactive") {
-      handleInactiveOffer();
-    } else if (value === "Deleted") {
-      handleDeletedOffer();
+    if (value === "Pending") {
+      handlePendingOrder();
+    } else if (value === "Failed") {
+      handleFailedOrder();
     } else {
-      fetchAllOffer();
+      fetchAllOrder();
     }
 
   }
 
-  const handleInactiveOffer = () => {
-    dispatch(fetchInactiveOffer({ activepage, recperpage, inputSearch })).then((res) => {
+  const handlePendingOrder = () => {
+    dispatch(fetchPendingOrder({ activepage, recperpage, inputSearch })).then((res) => {
       if (res.payload.success) {
         // message.success(res.payload.message)
       } else {
@@ -389,8 +369,8 @@ const Offer = () => {
       }
     });
   }
-  const handleDeletedOffer = () => {
-    dispatch(fetchDeletedOffer({ activepage, recperpage, inputSearch })).then((res) => {
+  const handleFailedOrder = () => {
+    dispatch(fetchFailedOrder({ activepage, recperpage, inputSearch })).then((res) => {
       console.log(res)
       if (res.payload.success) {
         // message.success(res.payload.message)
@@ -407,19 +387,19 @@ const Offer = () => {
     setType(value);
   }
 
-  const showOfferData = (_id) => {
+  const showOrderData = (_id) => {
     const item = arr.find(item => item._id === _id);
     const mainObj = { ...item, fileList: [{ url: item.image }] };
     form.setFieldsValue({ name: item.name })
-    setViewOfferData(mainObj);
+    setViewOrderData(mainObj);
   }
 
-  const handleOfferUpdate = (_id) => {
+  const handleOrderUpdate = (_id) => {
     const item = arr.find(item => item._id === _id);
     showDrawer(true);
     setActionType('update');
     const mainObj = { ...item, fileList: [{ url: item.image }] };
-    setViewOfferData(mainObj);
+    setViewOrderData(mainObj);
     setMainObjectId(_id);
     form.setFieldsValue({ name: mainObj.name, image: mainObj.image }); // Update form fields
   }
@@ -428,10 +408,10 @@ const Offer = () => {
     const formData = new FormData();
     formData.append('_id', mainObjectId);
     formData.append('image', file);
-    dispatch(changeOfferImage(formData)).then((res) => {
+    dispatch(changeOrderImage(formData)).then((res) => {
       if (res.payload.success) {
         message.success(res.payload.message)
-        fetchAllOffer();
+        fetchAllOrder();
         setOpen(false);
         showDrawer(false)
         setFileList([]);
@@ -449,11 +429,11 @@ const Offer = () => {
   const downloadExcel = async () => {
     try {
       setLoading({ ...loading, excel: true });
-      const response = await utility.get('/offer/export/excel/offer', {
+      const response = await utility.get('/Order/export/excel/Order', {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: response.headers['content-type'] });
-      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-offer.xlsx`);
+      FileSaver.saveAs(blob, `${new Date()}-${filterStatus}-Order.xlsx`);
       setLoading({ ...loading, excel: false });
     } catch (error) {
       setLoading({ ...loading, excel: false });
@@ -464,7 +444,7 @@ const Offer = () => {
   const downloadPDF = async () => {
     try {
       setLoading({ ...loading, pdf: true });
-      const response = await utility.get('/offer/export/pdf/offer', {
+      const response = await utility.get('/Order/export/pdf/Order', {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: response.headers['content-type'] });
@@ -478,18 +458,18 @@ const Offer = () => {
   const downloadCSV = async () => {
     try {
       setLoading({ ...loading, csv: true });
-      const response = await utility.get('/offer/export/csv/offer', {
+      const response = await utility.get('/Order/export/csv/Order', {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: 'text/csv' });
-      FileSaver.saveAs(blob, 'offer-data.csv');
+      FileSaver.saveAs(blob, 'Order-data.csv');
       setLoading({ ...loading, csv: false });
     } catch (error) {
       setLoading({ ...loading, csv: false });
       console.error('Error downloading CSV:', error);
     }
   };
-
+  console.log(arr,' array')
   return (
     <>
       <div className='container-fluid'>
@@ -524,20 +504,14 @@ const Offer = () => {
                 <Button type="dashed" loading={loading.csv} disabled={loading.csv} onClick={downloadCSV} className='ms-3' icon={<FileOutlined />}>CSV</Button>
               </div>
               <div className='d-flex align-items-center'>
-                <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleOfferFilter}>
-                  <Radio value={'All'}>All {filterStatus === "All" ? <Badge count={offer?.data?.totalRecords ?? 0} color='green' /> : ''}</Radio>
-                  <Radio value={'Inactive'}>Inactive {filterStatus === "Inactive" ? <Badge count={offer?.data?.totalRecords ?? 0} color='yellow' /> : ''}</Radio>
-                  <Radio value={'Deleted'}>Deleted {filterStatus === "Deleted" ? <Badge count={offer?.data?.totalRecords ?? 0} color='red' /> : ''}</Radio>
+                <Radio.Group name="radiogroup" defaultValue={'All'} onChange={handleOrderFilter}>
+                  <Radio value={'All'}>All {filterStatus === "All" ? <Badge count={order?.data?.totalRecords ?? 0} color='green' /> : ''}</Radio>
+                  <Radio value={'Pending'}>Pending {filterStatus === "Pending" ? <Badge count={order?.data?.totalRecords ?? 0} color='yellow' /> : ''}</Radio>
+                  <Radio value={'Failed'}>Failed {filterStatus === "Failed" ? <Badge count={order?.data?.totalRecords ?? 0} color='red' /> : ''}</Radio>
                 </Radio.Group>
                 <div className='search-field ms-3 me-3'>
-                  <InputSearchField setInputSearch={setInputSearch} loadingStatus={offer.isLoading} />
+                  <InputSearchField setInputSearch={setInputSearch} loadingStatus={order.isLoading} />
                 </div>
-                <Button
-                  type="primary"
-                  size={'small'}
-                  icon={<PlusOutlined />}
-                  onClick={() => showDrawer()}
-                />
               </div>
             </div>
             <div className=''>
@@ -553,7 +527,7 @@ const Offer = () => {
                     <>
                       <div className='col-md-12'>
                         <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Update offer">
+                          <Card title="Update Order">
                             <Form
                               form={form}
                               layout="vertical"
@@ -563,14 +537,14 @@ const Offer = () => {
                             >
                               <Form.Item
                                 name="name"
-                                label="offer Title"
+                                label="Order Title"
                                 size={'large'}
                                 hasFeedback={true}
-                                initialValue={viewOfferData?.name}
+                                initialValue={viewOrderData?.name}
                                 rules={[
                                   {
                                     required: true,
-                                    message: 'Please enter offer name',
+                                    message: 'Please enter Order name',
                                     min: 3,
                                   },
                                   {
@@ -580,12 +554,12 @@ const Offer = () => {
 
                                 ]}
                               >
-                                <Input placeholder="Please enter offer name" />
+                                <Input placeholder="Please enter Order name" />
                               </Form.Item>
 
                               <Form.Item
                                 name="image"
-                                label="offer Image"
+                                label="Order Image"
                                 size={'large'}
                               >
 
@@ -595,7 +569,7 @@ const Offer = () => {
                                     onChange={onChange}
                                     onPreview={onPreview}
                                     customRequest={handleCustomRequest}
-                                    fileList={fileList.length < 1 ? viewOfferData?.fileList : fileList}
+                                    fileList={fileList.length < 1 ? viewOrderData?.fileList : fileList}
                                   >
                                     {fileList.length < 1 && '+ Upload'}
                                   </Upload>
@@ -613,179 +587,54 @@ const Offer = () => {
                       </div>
 
                     </> :
-                    <>
-                      <div className='col-md-12'>
-                        <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                          <Card title="Add New offer">
-                            <Form
-                              form={form}
-                              layout="vertical"
-                              onFinish={onFinish}
-                              onFinishFailed={onFinishFailed}
-                              autoComplete="off"
-                            >
-                              <Form.Item
-                                name="name"
-                                label="offer Title"
-                                size={'large'}
-                                hasFeedback={true}
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: 'Please enter offer name',
-                                    min: 3,
-                                  },
-                                ]}
-                              >
-                                <Input placeholder="Please enter offer name" />
-                              </Form.Item>
-                              <Form.Item
-                                noStyle
-                                shouldUpdate={(prevValues, currentValues) =>
-                                  prevValues.fromAmount !== currentValues.fromAmount || prevValues.toAmount !== currentValues.toAmount
-                                }
-                              >
-                                {({ getFieldValue }) => {
-                                  return (
-                                    <>
-                                      <Form.Item
-                                        name="fromAmount"
-                                        label="From Amount"
-                                        size="large"
-                                        hasFeedback
-                                        dependencies={['toAmount']}
-                                        rules={[
-                                          {
-                                            required: true,
-                                            message: 'Please enter from amount',
-                                          },
-                                          {
-                                            validator(_, value) {
-                                              const toAmount = getFieldValue('toAmount');
-                                              if (toAmount && value >= toAmount) {
-                                                return Promise.reject(new Error('Starting amount must be less than ending amount'));
-                                              }
-                                              if (!value || value >= 1000) {
-                                                return Promise.resolve();
-                                              }
-                                              return Promise.reject(new Error('Amount must be at least 1000'));
-                                            },
-                                          },
-                                        ]}
-                                      >
-                                        <Input placeholder="Please enter from amount" />
-                                      </Form.Item>
-                                      <Form.Item
-                                        name="toAmount"
-                                        label="To Amount"
-                                        size="large"
-                                        hasFeedback
-                                        dependencies={['fromAmount']}
-                                        rules={[
-                                          {
-                                            required: true,
-                                            message: 'Please enter to amount',
-                                          },
-                                          {
-                                            validator(_, value) {
-                                              const fromAmount = getFieldValue('fromAmount');
-                                              if (fromAmount && value <= fromAmount) {
-                                                return Promise.reject(new Error('Ending amount must be greater than starting amount'));
-                                              }
-                                              if (!value || value >= 1000) {
-                                                return Promise.resolve();
-                                              }
-                                              return Promise.reject(new Error('Amount must be at least 1000'));
-                                            },
-                                          },
-                                        ]}
-                                      >
-                                        <Input placeholder="Please enter to amount" />
-                                      </Form.Item>
-                                    </>
-                                  );
-                                }}
-                              </Form.Item>
-
-
-
-
-                              <Form.Item
-                                name="percentage"
-                                label="Percentage"
-                                size={'large'}
-                                hasFeedback={true}
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: 'Please enter to percentage',
-                                    min: 1,
-                                  },
-                                  {
-                                    validator: (_, value) => {
-                                      if (value >= 1 && value <= 100) {
-                                        return Promise.resolve()
-                                      } else {
-                                        return Promise.reject(
-                                          'Please enter a percentage between 1 and 100',
-                                        )
-                                      }
-                                    }
-                                  }
-                                ]}
-                              >
-                                <Input placeholder="Please enter percentage" />
-                              </Form.Item>
-                              <Form.Item
-                                name="image"
-                                label="offer Image"
-                                size={'large'}
-                                hasFeedback={true}
-                                rules={[
-                                  {
-                                    validator: (_, value) => {
-                                      if (fileList.length < 1) {
-                                        return Promise.reject('Please choose offer image');
-                                      }
-                                      return Promise.resolve();
-                                    },
-                                  },
-                                ]}
-                              >
-
-                                <ImgCrop rotationSlider>
-                                  <Upload
-                                    listType="picture-card"
-                                    fileList={fileList}
-                                    onChange={onChange}
-                                    onPreview={onPreview}
-                                  >
-                                    {fileList.length < 1 && '+ Upload'}
-                                  </Upload>
-                                </ImgCrop>
-
-                              </Form.Item>
-                              <Form.Item label=" ">
-                                <Button type="primary" htmlType="submit">
-                                  Submit
-                                </Button>
-                              </Form.Item>
-                            </Form>
-                          </Card>
-                        </Space>
-                      </div>
-
-                    </>
+                   ""
                 }
               </Drawer>
             </div>
           </div>
           <div className='col-md-12'>
-            <Table columns={columns} dataSource={arr} onChange={onChangeTable} pagination={false} loading={offer?.isLoading} />
+            <Table 
+              
+              columns={columns} 
+              dataSource={arr} 
+              onChange={onChangeTable} 
+              pagination={false} 
+              loading={Order?.isLoading}
+              expandable={{
+                expandedRowRender: (record) => (
+                  
+                  <>
+                  
+                  <table className="product-table">
+                    <tr className="table-header">
+                        <th className="product-image-header">Product Image</th>
+                        <th className="product-name-header">Product Name</th>
+                        <th className="product-quantity-header">Product Quantity</th>
+                        <th className="product-quantity-header">Price</th>
+                    </tr>
+                    {
+                      record.action.orderDetails.map((item)=>{
+                        return(
+                          <tr className="table-row" key={item._id}>
+                            <td className="product-image-cell"><img src="product1.jpg" alt="Product 1" className="product-image"/></td>
+                            <td className="product-name-cell">{item.productName}</td>
+                            <td className="product-quantity-cell">{item.quantity}</td>
+                            <td className="product-quantity-cell">Rs.{item.totalPrice}</td>
+                        </tr>
+                        )
+                      })
+                    }
+                    
+                  </table>
+                  </>
+                ),
+                rowExpandable: (record) => true,
+              }}
+              />
           </div>
           <div className="col-md-12 d-flex justify-content-end g-3 mb-3">
             <Pagination
-              total={offer?.data?.totalRecords}
+              total={order?.data?.totalRecords}
               showSizeChanger={false}
               size="small"
               pageSize={recperpage}
@@ -796,16 +645,16 @@ const Offer = () => {
           </div>
         </div>
       </div>
-      <Modal title={`${actionType} offer`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title={`${actionType} Order`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
         <div>
           {
             actionType === "restore" ?
               <><input type="text" className='form-control' value={type} onChange={handleForm} />
-                <p>Note:If you want to restore the deleted offer so please type <pre><code><Tag color={"green"}>'restore'</Tag></code></pre></p></> :
+                <p>Note:If you want to restore the Failed Order so please type <pre><code><Tag color={"green"}>'restore'</Tag></code></pre></p></> :
               actionType === "reactive" ?
                 <>
                   <input type="text" className='form-control' value={type} onChange={handleForm} />
-                  <p>Note:If you want to activate to this offer so please type <pre><code><Tag color={"green"}>'active'</Tag></code></pre></p>
+                  <p>Note:If you want to activate to this Order so please type <pre><code><Tag color={"green"}>'active'</Tag></code></pre></p>
                 </> :
                 actionType === "view" ?
                   <>
@@ -823,7 +672,7 @@ const Offer = () => {
                               name="name"
                               label="Category Title"
                               size={'large'}
-                              initialValue={viewOfferData?.name}
+                              initialValue={viewOrderData?.name}
                             >
                               <Input disabled={true} />
                             </Form.Item>
@@ -835,7 +684,7 @@ const Offer = () => {
                             >
                               <Upload
                                 listType="picture-card"
-                                fileList={viewOfferData?.fileList}
+                                fileList={viewOrderData?.fileList}
                                 onChange={onChange}
                                 onPreview={onPreview}
                               >
@@ -849,7 +698,7 @@ const Offer = () => {
                   </> :
                   <>
                     <input type="text" className='form-control' value={type} onChange={handleForm} />
-                    <p>Note:If you want to delete Offer so please type <pre><code><Tag color={"red"}>'delete'</Tag></code></pre></p>
+                    <p>Note:If you want to delete Order so please type <pre><code><Tag color={"red"}>'delete'</Tag></code></pre></p>
                   </>
           }
 
@@ -860,4 +709,4 @@ const Offer = () => {
   )
 }
 
-export default Offer
+export default Order
